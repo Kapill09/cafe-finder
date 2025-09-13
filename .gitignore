@@ -1,0 +1,14 @@
+# Local API/config files
+src/config.js
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# System/IDE files
+node_modules/
+dist/
+.DS_Store
+Thumbs.db
+.vscode/

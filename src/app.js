@@ -714,19 +714,33 @@ const state = {
         mainHeader.style.display = 'none';
         mainContent.classList.remove('hidden');
         searchSection.classList.remove('hidden');
-        // Initialize map after hero is hidden
-        if (typeof initMap === 'function') {
-          initMap();
-        }
+        // Do NOT call initMap directly. It will be called by Google Maps API when loaded.
       });
     }
   }
   
   // Initialize hero on page load
-  document.addEventListener('DOMContentLoaded', initHero);
-  
+  document.addEventListener('DOMContentLoaded', () => {
+    initHero();
+    loadGoogleMapsScript();
+  });
+
+  // Dynamically load Google Maps JS API using .env key (Vite)
+  function loadGoogleMapsScript() {
+    if (typeof GOOGLE_MAPS_API_KEY === 'undefined' || !GOOGLE_MAPS_API_KEY) {
+      console.error('Google Maps API key not found in config.js');
+      return;
+    }
+    if (document.getElementById('google-maps-script')) return; // Prevent duplicate
+    const script = document.createElement('script');
+    script.id = 'google-maps-script';
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places,geometry&callback=initMap`;
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+  }
+
   // Expose initMap for Google callback
   window.initMap = initMap;
   
-  
-  
+
