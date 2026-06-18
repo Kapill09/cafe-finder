@@ -1,16 +1,28 @@
 /* Custom styles for Café Finder */
 
-/* Hero section */
+/* Hero section with coffee theme */
 .hero-bg {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #a0714f 0%, #c94836 50%, #e55a3f 100%);
   background-image: 
-    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 20% 80%, rgba(160, 113, 79, 0.4) 0%, transparent 50%),
     radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);
+    radial-gradient(circle at 40% 40%, rgba(201, 72, 54, 0.3) 0%, transparent 50%);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 100% 0%, rgba(255,255,255,0.1), transparent 50%);
+  pointer-events: none;
 }
 
 .coffee-bean {
   animation: float 6s ease-in-out infinite;
+  display: inline-block;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.1));
 }
 
 .coffee-bean:nth-child(2) {
@@ -23,18 +35,20 @@
 
 @keyframes float {
   0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-20px) rotate(5deg); }
+  50% { transform: translateY(-25px) rotate(8deg); }
 }
 
 /* Card animations */
 .result-card {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   transform: translateY(0);
+  background: linear-gradient(135deg, #ffffff 0%, #fdf7f1 100%);
 }
 
 .result-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px -10px rgba(201, 72, 54, 0.15), 0 10px 20px -5px rgba(160, 113, 79, 0.1);
+  border-color: #c94836;
 }
 
 .result-card:active {
@@ -55,7 +69,7 @@
 
 /* Loading animations */
 .skeleton-shimmer {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background: linear-gradient(90deg, #e8cdb5 25%, #d4a574 50%, #e8cdb5 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
@@ -77,35 +91,36 @@
 }
 
 .star {
-  color: #fbbf24;
+  color: #e55a3f;
   font-size: 14px;
 }
 
 .star.empty {
-  color: #d1d5db;
+  color: #e8cdb5;
 }
 
-/* Badge styles */
+/* Badge styles - Coffee themed */
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
+  padding: 4px 10px;
   border-radius: 12px;
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   border: 1px solid;
+  letter-spacing: 0.3px;
 }
 
 .badge-rating {
-  background-color: #fef3c7;
-  color: #92400e;
-  border-color: #f59e0b;
+  background-color: #fef3f2;
+  color: #c94836;
+  border-color: #e8cdb5;
 }
 
 .badge-price {
-  background-color: #f3f4f6;
-  color: #374151;
-  border-color: #d1d5db;
+  background-color: #fdf7f1;
+  color: #573a28;
+  border-color: #d4a574;
 }
 
 .badge-open {
@@ -115,9 +130,9 @@
 }
 
 .badge-type {
-  background-color: #e0e7ff;
-  color: #3730a3;
-  border-color: #6366f1;
+  background-color: #f5e6db;
+  color: #704c35;
+  border-color: #a0714f;
 }
 
 /* Button hover effects */
@@ -129,7 +144,7 @@
 
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 6px 16px rgba(201, 72, 54, 0.3);
 }
 
 .btn-primary:active {
@@ -139,8 +154,19 @@
 #searchAreaBtn {
   position: absolute;
   z-index: 999999;
+  animation: slideDown 0.3s ease-out;
 }
 
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
 
 /* Map container */
 .map-container {
@@ -154,10 +180,41 @@
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 10;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 12px 16px;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  padding: 16px 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+  color: #a0714f;
+}
+
+/* Details modal styling */
+#detailsModal {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+#detailsBody > div {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Responsive adjustments */
@@ -168,5 +225,9 @@
   
   .hero-bg {
     padding: 2rem 1rem;
+  }
+  
+  #detailsModal {
+    padding: 1rem;
   }
 }

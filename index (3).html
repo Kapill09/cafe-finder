@@ -1,0 +1,2706 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Café Finder - Discover Amazing Coffee Shops</title>
+    <meta name="description" content="Discover amazing cafes near you with real-time filters, photos, and directions. Find the perfect coffee spot." />
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="./src/config.js"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              coffee: {
+                50: '#fdf7f1',
+                100: '#f5e6db',
+                200: '#e8cdb5',
+                300: '#dbb490',
+                400: '#c89969',
+                500: '#a0714f',
+                600: '#8b5e42',
+                700: '#704c35',
+                800: '#573a28',
+                900: '#3f281b'
+              },
+              brand: {
+                50: '#fef3f2',
+                100: '#fde8e6',
+                200: '#fbd4cd',
+                300: '#f9b4a3',
+                400: '#f48d78',
+                500: '#e55a3f',
+                600: '#c94836',
+                700: '#a93a2d',
+                800: '#8a3028',
+                900: '#5f1f17'
+              }
+            },
+            fontFamily: {
+              display: ['Sora', 'system-ui', '-apple-system'],
+              sans: ['Inter', 'system-ui', '-apple-system']
+            }
+          }
+        }
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./src/styles.css">
+    <!-- V2 addition: styles for AI scores/modes/compare UI, inlined so there is nothing
+         external to fetch/cache/misplace. Does not redeclare anything from styles.css -->
+    <style id="cf-v2-styles">
+/* =========================================================================
+   Cafe Finder V2 — additive styles
+   This file ONLY defines new classes used by src/enhance.js. It does not
+   override or redeclare anything from the existing src/styles.css.
+   Color values are matched to the existing Tailwind config (coffee/brand).
+   ========================================================================= */
+
+:root {
+  --cf-coffee-50: #fdf7f1;
+  --cf-coffee-100: #f5e6db;
+  --cf-coffee-200: #e8cdb5;
+  --cf-coffee-600: #8b5e42;
+  --cf-coffee-700: #704c35;
+  --cf-coffee-900: #3f281b;
+  --cf-brand-500: #e55a3f;
+  --cf-brand-600: #c94836;
+  --cf-green: #16a34a;
+  --cf-amber: #d97706;
+  --cf-red: #dc2626;
+}
+
+/* ---------- Mode / profile selector row (in search section) ---------- */
+.cf-panel {
+  border-top: 1px dashed var(--cf-coffee-200);
+  padding-top: 12px;
+  margin-top: 8px;
+}
+.cf-panel-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cf-coffee-600);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cf-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cf-mode-btn, .cf-profile-chip, .cf-budget-chip {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--cf-coffee-200);
+  background: #fff;
+  color: var(--cf-coffee-700);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+.cf-mode-btn:hover, .cf-profile-chip:hover, .cf-budget-chip:hover {
+  border-color: var(--cf-brand-500);
+  background: var(--cf-coffee-50);
+}
+.cf-mode-btn.active, .cf-profile-chip.active, .cf-budget-chip.active {
+  background: linear-gradient(135deg, var(--cf-brand-500), var(--cf-coffee-600));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(201, 72, 54, 0.25);
+}
+
+/* ---------- Card-level badges injected into each result card ---------- */
+.cf-card-block {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--cf-coffee-100);
+  animation: cfFadeIn 0.25s ease;
+}
+.cf-bestfor-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.cf-bestfor-tag {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--cf-coffee-50);
+  color: var(--cf-coffee-700);
+  border: 1px solid var(--cf-coffee-200);
+}
+.cf-overall-ring {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px 3px 6px;
+  border-radius: 999px;
+  color: #fff;
+}
+.cf-overall-ring.lvl-high { background: var(--cf-green); }
+.cf-overall-ring.lvl-mid { background: var(--cf-amber); }
+.cf-overall-ring.lvl-low { background: #9ca3af; }
+
+.cf-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--cf-coffee-700);
+  margin-bottom: 8px;
+}
+.cf-meta-row span { display: inline-flex; align-items: center; gap: 3px; }
+
+.cf-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.cf-compare-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--cf-coffee-700);
+  cursor: pointer;
+  user-select: none;
+}
+.cf-compare-label input { width: 15px; height: 15px; accent-color: var(--cf-brand-500); cursor: pointer; }
+.cf-insights-btn {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--cf-brand-600);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.cf-insights-btn:hover { text-decoration: underline; }
+
+/* ---------- Floating compare bar ---------- */
+.cf-compare-bar {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%) translateY(120%);
+  background: var(--cf-coffee-900);
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+  z-index: 60;
+  transition: transform 0.25s ease;
+  font-size: 13.5px;
+}
+.cf-compare-bar.visible { transform: translateX(-50%) translateY(0); }
+.cf-compare-bar button {
+  font-weight: 700;
+  font-size: 13px;
+  padding: 7px 14px;
+  border-radius: 9px;
+  border: none;
+  cursor: pointer;
+}
+.cf-compare-bar .cf-cmp-view { background: var(--cf-brand-500); color: #fff; }
+.cf-compare-bar .cf-cmp-clear { background: rgba(255,255,255,0.12); color: #fff; }
+
+/* ---------- Comparison modal ---------- */
+#cfComparisonModal table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+#cfComparisonModal th, #cfComparisonModal td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--cf-coffee-100);
+  text-align: left;
+}
+#cfComparisonModal th { color: var(--cf-coffee-600); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; }
+#cfComparisonModal td.cf-cmp-name { font-weight: 700; color: var(--cf-coffee-900); }
+.cf-cmp-score { font-weight: 700; }
+
+/* ---------- Insight dashboard (inside cafe details modal) ---------- */
+.cf-dashboard {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 2px dashed var(--cf-coffee-200);
+}
+.cf-dashboard-title {
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--cf-coffee-900);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cf-dash-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+@media (max-width: 560px) { .cf-dash-grid { grid-template-columns: 1fr; } }
+
+.cf-score-card {
+  background: var(--cf-coffee-50);
+  border: 1px solid var(--cf-coffee-100);
+  border-radius: 12px;
+  padding: 12px;
+}
+.cf-score-card h5 {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--cf-coffee-600);
+  margin: 0 0 8px 0;
+}
+.cf-score-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12.5px; }
+.cf-score-bar-row .lbl { width: 84px; flex-shrink: 0; color: var(--cf-coffee-700); }
+.cf-score-bar-track { flex: 1; height: 7px; border-radius: 999px; background: var(--cf-coffee-100); overflow: hidden; }
+.cf-score-bar-fill { height: 100%; border-radius: 999px; }
+.cf-score-bar-val { width: 30px; text-align: right; font-weight: 700; color: var(--cf-coffee-900); }
+
+.cf-peak-track {
+  position: relative;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--cf-coffee-100);
+  overflow: hidden;
+  margin: 8px 0;
+}
+.cf-peak-block {
+  position: absolute;
+  top: 0; bottom: 0;
+  background: var(--cf-brand-500);
+  opacity: 0.75;
+}
+.cf-peak-now-marker {
+  position: absolute;
+  top: -3px; bottom: -3px;
+  width: 2px;
+  background: var(--cf-coffee-900);
+}
+.cf-peak-legend { font-size: 11.5px; color: var(--cf-coffee-600); display: flex; justify-content: space-between; }
+
+.cf-crowd-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.cf-crowd-cell {
+  text-align: center;
+  border-radius: 10px;
+  padding: 10px 6px;
+  background: #fff;
+  border: 1px solid var(--cf-coffee-100);
+}
+.cf-crowd-cell .t { font-size: 11px; color: var(--cf-coffee-600); margin-bottom: 4px; }
+.cf-crowd-cell .v { font-weight: 700; font-size: 13px; }
+
+.cf-pill-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.cf-item-pill {
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid var(--cf-coffee-200);
+  color: var(--cf-coffee-700);
+}
+.cf-item-pill.signature { background: var(--cf-coffee-900); color: #fff; border-color: var(--cf-coffee-900); }
+
+.cf-summary-box {
+  background: var(--cf-coffee-50);
+  border-left: 3px solid var(--cf-brand-500);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--cf-coffee-700);
+  line-height: 1.5;
+}
+
+.cf-stars-row { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 4px; }
+.cf-stars-row .lbl { width: 36px; color: var(--cf-coffee-600); }
+.cf-stars-row .cf-score-bar-track { flex: 1; }
+.cf-stars-row .pct { width: 32px; text-align: right; color: var(--cf-coffee-700); font-weight: 600; }
+
+.cf-heuristic-note {
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--cf-coffee-500, #a0714f);
+  font-style: italic;
+}
+
+@keyframes cfFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Collapsible / hover-to-reveal navbar ---------- */
+#searchSection.cf-collapsible {
+  overflow: hidden;
+  transition: max-height 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.cf-nav-handle {
+  position: absolute;
+  left: 50%;
+  bottom: -15px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, var(--cf-brand-500), var(--cf-coffee-600));
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 14px 5px 11px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  z-index: 31;
+  white-space: nowrap;
+}
+.cf-nav-handle-chevron {
+  display: inline-block;
+  transition: transform 0.25s ease;
+}
+#searchSection.cf-expanded .cf-nav-handle-chevron {
+  transform: rotate(180deg);
+}
+
+    </style>
+    <style>
+      html, body, #app {
+        height: 100%;
+      }
+      body { 
+        font-family: Inter, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, sans-serif;
+        color: #3f281b;
+        background: #fdf7f1;
+      }
+      #map { width: 500px; height: 500px; border-radius: 12px; }
+      .scrollbar-thin::-webkit-scrollbar { height: 8px; width: 8px; }
+      .scrollbar-thin::-webkit-scrollbar-thumb { background: #d4a574; border-radius: 9999px; }
+      .scrollbar-thin::-webkit-scrollbar-track { background: #f5e6db; }
+    </style>
+  </head>
+  <body class="min-h-screen bg-gradient-to-br from-coffee-50 via-white to-orange-50">
+    <div id="app" class="min-h-screen flex flex-col">
+      <!-- Header -->
+      <header id="mainHeader" class="sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-coffee-100 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="h-11 w-11 rounded-xl bg-gradient-to-br from-brand-500 to-coffee-600 text-white grid place-content-center shadow-lg">☕</div>
+            <div>
+              <h1 class="text-2xl font-bold text-coffee-900">Café Finder</h1>
+              <p class="text-xs text-coffee-600">Discover Amazing Coffee Spots</p>
+            </div>
+          </div>
+          <div id="statusBadge" class="text-sm px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">Online</div>
+        </div>
+      </header>
+
+      <!-- Hero Section -->
+      <section id="heroSection" class="hero-bg min-h-screen flex items-center justify-center">
+        <div class="max-w-4xl mx-auto text-center px-4">
+          <div class="mb-8">
+            <div class="coffee-bean text-7xl mb-4">☕</div>
+            <div class="coffee-bean text-5xl mb-2">☕</div>
+            <div class="coffee-bean text-6xl">☕</div>
+          </div>
+          <h1 class="text-5xl md:text-7xl font-bold mb-6 text-coffee-900">Find Your Next <span class="bg-gradient-to-r from-brand-500 to-coffee-600 bg-clip-text text-transparent">Perfect Café</span></h1>
+          <p class="text-xl md:text-2xl mb-8 text-coffee-700 max-w-2xl mx-auto leading-relaxed">Discover amazing coffee shops, cozy hangouts, and hidden cafés near you. Real ratings, real photos, real directions.</p>
+          <button id="startSearchBtn" class="relative z-10 bg-gradient-to-r from-brand-500 to-coffee-600 hover:from-brand-600 hover:to-coffee-700 text-white px-10 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl inline-flex items-center gap-2 cursor-pointer">
+            <span>Start Exploring</span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M12.97 3.97a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 1 1-1.06-1.06L19.44 12 12.97 5.03a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" /></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Search and Filters -->
+      <section id="searchSection" class="hidden fixed top-0 left-0 right-0 z-30 bg-white border-b border-coffee-100 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+          <div class="flex flex-col gap-4">
+            <div class="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+              <div class="flex-1 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-coffee-600"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+                <input id="queryInput" type="text" placeholder="Search cafés, restaurants, bakeries…" class="flex-1 px-4 py-3 rounded-lg border border-coffee-200 bg-coffee-50 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white focus:border-brand-300 transition text-coffee-900 placeholder:text-coffee-500" />
+                <button id="searchBtn" class="inline-flex items-center gap-2 px-4 py-3 rounded-lg bg-gradient-to-r from-brand-500 to-coffee-600 hover:from-brand-600 hover:to-coffee-700 text-white transition active:scale-95 font-medium shadow-md">
+                  <span class="hidden sm:inline">Search</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 4.28 12.053l4.708 4.709a.75.75 0 1 0 1.06-1.061l-4.708-4.709A6.75 6.75 0 0 0 10.5 3.75Zm-5.25 6.75a5.25 5.25 0 1 1 10.5 0 5.25 5.25 0 0 1-10.5 0Z" clip-rule="evenodd"/></svg>
+                </button>
+              </div>
+              <div class="flex items-center gap-2">
+                <button id="locateBtn" class="px-4 py-3 rounded-lg border border-coffee-200 hover:bg-coffee-50 text-coffee-900 font-medium transition">📍 Use my location</button>
+                <button id="nearbyBtn" class="px-4 py-3 rounded-lg border border-coffee-200 hover:bg-coffee-50 text-coffee-900 font-medium transition">🔍 Find nearby</button>
+              </div>
+            </div>
+
+            <!-- Category chips -->
+            <div class="flex flex-wrap gap-2">
+              <button class="cat-chip px-4 py-2 rounded-full border border-coffee-200 text-sm font-medium text-coffee-700 hover:bg-coffee-50 hover:border-coffee-300 transition" data-type="cafe" data-query="cafe">☕ Cafe</button>
+              <button class="cat-chip px-4 py-2 rounded-full border border-coffee-200 text-sm font-medium text-coffee-700 hover:bg-coffee-50 hover:border-coffee-300 transition" data-type="restaurant" data-query="restaurant">🍽️ Restaurant</button>
+              <button class="cat-chip px-4 py-2 rounded-full border border-coffee-200 text-sm font-medium text-coffee-700 hover:bg-coffee-50 hover:border-coffee-300 transition" data-type="bakery" data-query="bakery">🥐 Bakery</button>
+              <button class="cat-chip px-4 py-2 rounded-full border border-coffee-200 text-sm font-medium text-coffee-700 hover:bg-coffee-50 hover:border-coffee-300 transition" data-type="meal_takeaway" data-query="takeaway">📦 Takeaway</button>
+              <button class="cat-chip px-4 py-2 rounded-full border border-coffee-200 text-sm font-medium text-coffee-700 hover:bg-coffee-50 hover:border-coffee-300 transition" data-type="tea" data-query="tea">🍵 Tea House</button>
+            </div>
+
+            <!-- Filters -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <div>
+                <label class="text-xs font-semibold text-coffee-700 block mb-2">Budget</label>
+                <select id="priceFilter" class="w-full px-3 py-2.5 rounded-lg border border-coffee-200 bg-white text-coffee-900 focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium">
+                  <option value="">Any</option>
+                  <option value="1">₹ Budget</option>
+                  <option value="2">₹₹ Moderate</option>
+                  <option value="3">₹₹₹ Premium</option>
+                  <option value="4">₹₹₹₹ Luxury</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs font-semibold text-coffee-700 block mb-2">Min Rating</label>
+                <select id="ratingFilter" class="w-full px-3 py-2.5 rounded-lg border border-coffee-200 bg-white text-coffee-900 focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium">
+                  <option value="">Any</option>
+                  <option value="4.7">4.7+ ⭐</option>
+                  <option value="4.5">4.5+</option>
+                  <option value="4.0">4.0+</option>
+                  <option value="3.5">3.5+</option>
+                </select>
+              </div>
+              <div class="flex items-end gap-3 bg-coffee-50 px-3 py-2.5 rounded-lg border border-coffee-200">
+                <input id="wifiFilter" type="checkbox" class="w-5 h-5 rounded accent-brand-500 cursor-pointer" />
+                <label class="text-sm font-medium text-coffee-700 cursor-pointer">WiFi</label>
+              </div>
+              <div class="flex items-end gap-3 bg-coffee-50 px-3 py-2.5 rounded-lg border border-coffee-200">
+                <input id="openNowFilter" type="checkbox" class="w-5 h-5 rounded accent-brand-500 cursor-pointer" />
+                <label class="text-sm font-medium text-coffee-700 cursor-pointer">Open Now</label>
+              </div>
+              <div>
+                <label class="text-xs font-semibold text-coffee-700 block mb-2">Radius</label>
+                <select id="radiusFilter" class="w-full px-3 py-2.5 rounded-lg border border-coffee-200 bg-white text-coffee-900 focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium">
+                  <option value="1000">1 km</option>
+                  <option value="2000" selected>2 km</option>
+                  <option value="5000">5 km</option>
+                  <option value="10000">10 km</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Controls + Content -->
+<main id="mainContent" 
+class="hidden flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4" 
+style="margin-top: 120px;">
+
+<!-- Layout: Responsive -->
+<section class="flex flex-col lg:flex-row gap-6">
+  
+  <!-- Map -->
+  <div class="relative w-full lg:w-[500px] mt-4 lg:mt-16 lg:sticky lg:top-24 self-start">
+    <div id="map" 
+      class="w-full h-[300px] sm:h-[400px] lg:w-[500px] lg:h-[500px] rounded-xl overflow-hidden border border-coffee-200 shadow-lg">
+    </div>
+
+    <!-- Search this area button -->
+    <button id="searchAreaBtn"
+      class="hidden absolute top-4 left-1/2 -translate-x-1/2 px-5 py-3 bg-gradient-to-r from-brand-500 to-coffee-600 hover:from-brand-600 hover:to-coffee-700 text-white rounded-lg shadow-lg z-[999999] font-medium transition">
+      🔍 Search this area
+    </button>
+  </div>
+  
+  <!-- Results panel -->
+  <div class="flex-1 bg-white rounded-xl border border-coffee-200 overflow-hidden flex flex-col relative z-0 shadow-lg">        
+    <div class="px-5 py-4 border-b border-coffee-100 flex items-center justify-between bg-gradient-to-r from-coffee-50 to-transparent">
+      <h2 class="font-bold text-coffee-900 text-lg">Results</h2>
+      <span id="resultCount" class="text-sm font-semibold text-coffee-600 bg-coffee-100 px-3 py-1 rounded-full">0</span>
+    </div>
+    
+    <!-- Empty state -->
+    <div id="emptyState" class="hidden flex-1 flex flex-col items-center justify-center p-8 text-center">
+      <div class="text-6xl mb-4">☕</div>
+      <h3 class="text-xl font-bold text-coffee-900 mb-2">No cafés found</h3>
+      <p class="text-coffee-600 mb-6 max-w-sm">Try adjusting your filters or searching in a different area.</p>
+      <div class="space-y-2 text-sm text-coffee-700">
+        <button class="block text-brand-600 hover:text-brand-700 font-medium">↑ Increase radius</button>
+        <button class="block text-brand-600 hover:text-brand-700 font-medium">↓ Lower rating filter</button>
+        <button class="block text-brand-600 hover:text-brand-700 font-medium">🔄 Remove filters</button>
+      </div>
+    </div>
+    
+    <div id="results" 
+      class="flex-1 overflow-auto p-4 space-y-3 scrollbar-thin" 
+      style="max-height: 500px;">
+    </div>
+    
+    <div id="resultsSkeleton" 
+      class="hidden flex-1 overflow-auto p-4 space-y-3" 
+      style="max-height: 500px;">
+      <div class="animate-pulse overflow-hidden rounded-xl border border-coffee-200 bg-white">
+        <div class="flex gap-3 p-3">
+          <div class="w-24 h-24 bg-coffee-200 rounded-lg"></div>
+          <div class="min-w-0 flex-1 space-y-2">
+            <div class="h-4 bg-coffee-200 rounded w-2/3"></div>
+            <div class="h-3 bg-coffee-200 rounded w-1/2"></div>
+            <div class="h-3 bg-coffee-200 rounded w-1/3"></div>
+          </div>
+        </div>
+      </div>
+      <div class="animate-pulse overflow-hidden rounded-xl border border-coffee-200 bg-white">
+        <div class="flex gap-3 p-3">
+          <div class="w-24 h-24 bg-coffee-200 rounded-lg"></div>
+          <div class="min-w-0 flex-1 space-y-2">
+            <div class="h-4 bg-coffee-200 rounded w-2/3"></div>
+            <div class="h-3 bg-coffee-200 rounded w-1/2"></div>
+            <div class="h-3 bg-coffee-200 rounded w-1/3"></div>
+          </div>
+        </div>
+      </div>
+      <div class="animate-pulse overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div class="flex gap-3 p-3">
+          <div class="w-24 h-24 bg-slate-200 rounded-lg"></div>
+          <div class="min-w-0 flex-1 space-y-2">
+            <div class="h-4 bg-slate-200 rounded w-2/3"></div>
+            <div class="h-3 bg-slate-200 rounded w-1/2"></div>
+            <div class="h-3 bg-slate-200 rounded w-1/3"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+
+      <footer class="py-8 text-center text-coffee-600 text-sm border-t border-coffee-100">
+        <div class="max-w-7xl mx-auto px-4">
+          <p class="mb-2 font-medium">Café Finder • Powered by Google Maps API</p>
+          <p class="text-xs text-coffee-500">Helping you discover amazing coffee spots around you</p>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Details Modal -->
+    <div id="detailsModal" class="fixed inset-0 hidden items-center justify-center z-50 bg-black/40 backdrop-blur-sm p-4">
+      <div class="relative bg-white w-full max-w-2xl max-h-[90vh] rounded-2xl shadow-2xl border border-coffee-200 overflow-hidden flex flex-col">
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-5 border-b border-coffee-100 bg-gradient-to-r from-coffee-50 to-transparent sticky top-0 z-10">
+          <h3 id="detailsTitle" class="font-bold text-lg text-coffee-900 truncate">Loading...</h3>
+          <button id="detailsClose" class="p-2 rounded-lg hover:bg-coffee-100 transition text-coffee-600">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" /></svg>
+          </button>
+        </div>
+        <!-- Body -->
+        <div id="detailsBody" class="flex-1 overflow-auto p-6 space-y-5">
+          <!-- Filled dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
+    <script>
+      // Full app.js embedded inline
+      /* global google, markerClusterer */
+const state = {
+    map: null,
+    userMarker: null,
+    placeMarkers: [],
+    markerClusterer: null,
+    placesService: null,
+    autocomplete: null,
+    directionsService: null,
+    directionsRenderer: null,
+    userLocation: null,
+    lastResults: [],
+    isOnline: navigator.onLine,
+    currentCategoryType: null,
+    miniTagLoaded: new Set(),
+    placeIdToMarker: {},
+    isSearching: false,
+    googleMapsReady: false,
+    googleMapsFailed: false,
+    lastPlacesStatus: null,
+    uiBound: false
+  };
+
+  const fallbackPlaces = [
+    {
+      name: 'Blue Tokai Coffee Roasters',
+      vicinity: 'Connaught Place, New Delhi',
+      rating: 4.5,
+      price_level: 2,
+      types: ['cafe'],
+      geometry: { location: { lat: 28.6328, lng: 77.2197 } },
+      place_id: '',
+      distanceMeters: 1800,
+      user_ratings_total: 2400,
+      opening_hours: { open_now: true }
+    },
+    {
+      name: 'The Big Chill Cafe',
+      vicinity: 'Khan Market, New Delhi',
+      rating: 4.4,
+      price_level: 3,
+      types: ['restaurant', 'cafe'],
+      geometry: { location: { lat: 28.6006, lng: 77.2276 } },
+      place_id: '',
+      distanceMeters: 3200,
+      user_ratings_total: 5600,
+      opening_hours: { open_now: true }
+    },
+    {
+      name: 'Sardar-Ji-Bakhsh Coffee',
+      vicinity: 'Rajouri Garden, New Delhi',
+      rating: 4.2,
+      price_level: 2,
+      types: ['cafe'],
+      geometry: { location: { lat: 28.6417, lng: 77.1209 } },
+      place_id: '',
+      distanceMeters: 6200,
+      user_ratings_total: 1300,
+      opening_hours: { open_now: false }
+    },
+    {
+      name: 'Ama Cafe',
+      vicinity: 'Majnu-ka-tilla, New Delhi',
+      rating: 4.6,
+      price_level: 2,
+      types: ['cafe', 'bakery'],
+      geometry: { location: { lat: 28.7027, lng: 77.2280 } },
+      place_id: '',
+      distanceMeters: 9700,
+      user_ratings_total: 7900,
+      opening_hours: { open_now: true }
+    }
+  ];
+  
+  window.addEventListener('online', () => updateOnlineStatus(true));
+  window.addEventListener('offline', () => updateOnlineStatus(false));
+  
+  function updateOnlineStatus(isOnline) {
+    state.isOnline = isOnline;
+    const badge = document.getElementById('statusBadge');
+    if (!badge) return;
+    if (isOnline) {
+      badge.textContent = '🟢 Online';
+      badge.className = 'text-sm px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium';
+    } else {
+      badge.textContent = '🔴 Offline';
+      badge.className = 'text-sm px-4 py-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-medium';
+    }
+  }
+  
+  // Initialize map
+  async function initMap() {
+    updateOnlineStatus(navigator.onLine);
+    state.googleMapsReady = true;
+  
+    // Default view: Delhi
+    const defaultCenter = { lat: 28.6139, lng: 77.2090 };
+  
+    state.map = new google.maps.Map(document.getElementById('map'), {
+      center: defaultCenter,
+      zoom: 5,
+      fullscreenControl: false,
+      mapTypeControl: false,
+      streetViewControl: false,
+      styles: [
+        {
+          featureType: 'poi',
+          elementType: 'labels',
+          stylers: [{ visibility: 'off' }]
+        }
+      ]
+    });
+  
+    state.placesService = new google.maps.places.PlacesService(state.map);
+    state.directionsService = new google.maps.DirectionsService();
+    state.directionsRenderer = new google.maps.DirectionsRenderer({ 
+      map: state.map, 
+      suppressMarkers: false,
+      polylineOptions: {
+        strokeColor: '#c94836',
+        strokeOpacity: 0.8,
+        strokeWeight: 4
+      }
+    });
+  
+    // Initialize search area button
+    const searchAreaBtn = document.getElementById('searchAreaBtn');
+    if (searchAreaBtn) {
+      searchAreaBtn.classList.add('hidden');
+      
+      state.map.addListener('dragend', () => {
+        searchAreaBtn.classList.remove('hidden');
+      });
+      state.map.addListener('zoom_changed', () => {
+        searchAreaBtn.classList.remove('hidden');
+      });
+  
+      searchAreaBtn.addEventListener('click', async () => {
+        searchAreaBtn.classList.add('hidden');
+        await findNearbyCafes(state.map.getCenter().toJSON(), state.currentCategoryType || undefined);
+      });
+    }
+  
+    bindUI();
+    await locateUser();
+    if (state.userLocation) {
+      state.map.setCenter(state.userLocation);
+    }
+  
+    // If offline, load last results
+    if (!state.isOnline) {
+      const cached = loadCachedResults();
+      if (cached?.results?.length) {
+        state.lastResults = cached.results;
+        renderResults(cached.results, cached.userLocation || state.userLocation);
+      }
+      return;
+    }
+  
+    // Initial nearby fetch
+    await findNearbyCafes();
+  }
+  
+  
+  function setupAutocomplete() {
+    // Setup Places Autocomplete on the search input for suggestions
+    const input = document.getElementById('queryInput');
+    if (input && !state.autocomplete && window.google?.maps?.places?.Autocomplete && state.map) {
+      state.autocomplete = new google.maps.places.Autocomplete(input, {
+        fields: ['place_id', 'geometry', 'name', 'formatted_address', 'types'],
+        componentRestrictions: { country: 'in' }
+      });
+      state.autocomplete.bindTo('bounds', state.map);
+      state.autocomplete.addListener('place_changed', () => {
+        const place = state.autocomplete.getPlace();
+        if (place && place.geometry && place.geometry.location) {
+          const loc = place.geometry.location;
+          try { 
+            state.map.setCenter(loc);
+            state.map.setZoom(14); 
+          } catch {}
+          findNearbyCafes(loc.toJSON());
+        } else {
+          findNearbyCafes();
+        }
+      });
+    }
+  }
+
+  function bindUI() {
+    setupAutocomplete();
+    if (state.uiBound) return;
+    state.uiBound = true;
+  
+    document.getElementById('locateBtn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('locateBtn');
+      const originalText = btn.textContent;
+      btn.textContent = '⏳ Getting location...';
+      btn.disabled = true;
+      
+      await locateUser();
+      
+      btn.textContent = originalText;
+      btn.disabled = false;
+      
+      if (state.userLocation) {
+        state.map.setCenter(state.userLocation);
+        state.map.setZoom(13);
+        await findNearbyCafes();
+      } else {
+        const msg = navigator.geolocation
+          ? 'Unable to get your location. Please check permissions and try again.'
+          : 'Geolocation not supported in your browser.';
+        alert(msg);
+      }
+    });
+  
+    document.getElementById('nearbyBtn')?.addEventListener('click', async () => {
+      if (!state.userLocation) {
+        alert('Please use "Use my location" first to find nearby cafés.');
+        return;
+      }
+      await findNearbyCafes(state.userLocation);
+    });
+  
+    document.getElementById('searchBtn')?.addEventListener('click', async () => {
+      await findNearbyCafes();
+    });
+  
+    const input = document.getElementById('queryInput');
+    // Enter-to-search and debounce typing
+    if (input) {
+  let debounceTimer = null;
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      clearTimeout(debounceTimer);
+      findNearbyCafes();
+    }
+  });
+
+  input.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      findNearbyCafes();
+    }, 800);
+  });
+}
+  
+    // Category chips
+    document.querySelectorAll('.cat-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.cat-chip').forEach(b => {
+          b.classList.remove('bg-coffee-100', 'border-coffee-400', 'text-coffee-900');
+        });
+        btn.classList.add('bg-coffee-100', 'border-coffee-400', 'text-coffee-900');
+        
+        const query = btn.getAttribute('data-query') || '';
+        const type = btn.getAttribute('data-type') || '';
+        const qInput = document.getElementById('queryInput');
+        if (qInput) qInput.value = query;
+        state.currentCategoryType = type || null;
+        findNearbyCafes(undefined, state.currentCategoryType || undefined);
+      });
+    });
+  
+    // Filter listeners
+    ['priceFilter', 'ratingFilter', 'wifiFilter', 'openNowFilter', 'radiusFilter'].forEach(id => {
+      document.getElementById(id)?.addEventListener('change', () => {
+        findNearbyCafes();
+      });
+    });
+  }
+  
+  function locateUser() {
+    return new Promise(resolve => {
+      if (!navigator.geolocation) {
+        console.warn('Geolocation not supported');
+        return resolve(null);
+      }
+      
+      state.userLocation = null;
+      if (state.userMarker) {
+        state.userMarker.setMap(null);
+        state.userMarker = null;
+      }
+      
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          state.userLocation = coords;
+          
+          state.userMarker = new google.maps.Marker({
+            position: coords,
+            map: state.map,
+            title: 'Your location',
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 10,
+              fillColor: '#c94836',
+              fillOpacity: 1,
+              strokeColor: '#fff',
+              strokeWeight: 3,
+              label: '📍'
+            },
+            zIndex: 1000
+          });
+          
+          state.map.setCenter(coords);
+          state.map.setZoom(13);
+          
+          resolve(coords);
+        },
+        err => {
+          console.warn('Geolocation error:', err);
+          resolve(null);
+        },
+        { 
+          enableHighAccuracy: true, 
+          maximumAge: 0,
+          timeout: 15000
+        }
+      );
+    });
+  }
+  
+  async function findNearbyCafes(forcedLocation, categoryType) {
+    if (state.isSearching) return;
+    if (!state.googleMapsReady || !state.map || !state.placesService) {
+      renderFallbackResults('Live Google Maps/Places is not available. Showing sample restaurants until the API key is fixed.');
+      return;
+    }
+    if (!state.isOnline) {
+      showSkeletons(false);
+      const cached = loadCachedResults();
+      if (cached?.results?.length) {
+        renderResults(cached.results, cached.userLocation || state.userLocation);
+      }
+      return;
+    }
+    
+    state.isSearching = true;
+    showSkeletons(true);
+  
+    try {
+      const keyword = document.getElementById('queryInput')?.value?.trim() || '';
+      const priceStr = document.getElementById('priceFilter')?.value || '';
+      const minRating = parseFloat(document.getElementById('ratingFilter')?.value || '0');
+      const preferWifi = document.getElementById('wifiFilter')?.checked || false;
+      const openNow = document.getElementById('openNowFilter')?.checked || false;
+      let radius = parseInt(document.getElementById('radiusFilter')?.value || '2000', 10);
+    
+      const location = forcedLocation || state.userLocation || state.map.getCenter().toJSON();
+    
+      // Smart radius calculation from map bounds
+      try {
+        const bounds = state.map.getBounds();
+        if (bounds) {
+          const center = bounds.getCenter();
+          const ne = bounds.getNorthEast();
+          const meters = google.maps.geometry.spherical.computeDistanceBetween(center, ne);
+          radius = Math.min(Math.max(Math.round(meters * 1.2), 500), 25000);
+        }
+      } catch {}
+    
+      // Search logic
+      let results = [];
+      
+      if (keyword.length > 0 && state.placesService?.textSearch) {
+        const textReq = {
+          location,
+          radius,
+          query: keyword,
+          type: categoryType || undefined,
+          openNow: openNow || undefined
+        };
+        results = await textSearchAsync(textReq);
+      }
+      
+      if (!results || results.length === 0) {
+        const searchType = categoryType || keyword || 'restaurant';
+        const nearbyReq = {
+          location,
+          radius,
+          keyword: searchType,
+          type: searchType,
+          openNow: openNow || undefined
+        };
+        results = await nearbySearchAsync(nearbyReq);
+      }
+      
+      if (!results || results.length === 0) {
+        if (state.lastPlacesStatus && state.lastPlacesStatus !== google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+          renderFallbackResults(`Google Places returned ${state.lastPlacesStatus}. Showing sample restaurants until the Maps API key, billing, and Places API access are fixed.`);
+          return;
+        }
+        const fallbackReq = {
+          location,
+          radius: Math.min(radius * 1.5, 25000),
+          keyword: 'cafe restaurant',
+          type: 'restaurant',
+          openNow: false
+        };
+        results = await nearbySearchAsync(fallbackReq);
+      }
+    
+      // Client-side filtering
+      let filtered = (results || []).filter(r => {
+        const rating = r.rating || 0;
+        if (rating < minRating) return false;
+        
+        if (priceStr) {
+          const price = parseInt(priceStr, 10);
+          if (r.price_level !== price) return false;
+        }
+        
+        if (preferWifi && !(r.types || []).includes('internet_cafe')) {
+          return false;
+        }
+        
+        return true;
+      });
+    
+      // Enrich with distance
+      const withDistance = filtered.map(place => {
+        const distanceMeters = google.maps.geometry && location
+          ? google.maps.geometry.spherical.computeDistanceBetween(
+              new google.maps.LatLng(location.lat, location.lng),
+              place.geometry.location
+            )
+          : null;
+        return { ...place, distanceMeters };
+      });
+    
+      // Sort by distance
+      withDistance.sort((a, b) => (a.distanceMeters ?? Infinity) - (b.distanceMeters ?? Infinity));
+    
+      state.lastResults = withDistance;
+      cacheResults(withDistance, location);
+      renderResults(withDistance, location);
+      addMarkers(withDistance);
+      
+    } catch (error) {
+      console.error('Search error:', error);
+      showEmptyState(true, 'An error occurred while searching. Please try again.');
+    } finally {
+      state.isSearching = false;
+      showSkeletons(false);
+    }
+  }
+  
+  function nearbySearchAsync(request) {
+    return new Promise(resolve => {
+      if (!state.placesService?.nearbySearch) return resolve([]);
+      state.placesService.nearbySearch(request, (results, status) => {
+        state.lastPlacesStatus = status;
+        if (status !== google.maps.places.PlacesServiceStatus.OK || !results) {
+          resolve([]);
+          return;
+        }
+        resolve(results);
+      });
+    });
+  }
+  
+  function textSearchAsync(request) {
+    return new Promise(resolve => {
+      if (!state.placesService?.textSearch) return resolve([]);
+      state.placesService.textSearch(request, (results, status) => {
+        state.lastPlacesStatus = status;
+        if (status !== google.maps.places.PlacesServiceStatus.OK || !results) {
+          resolve([]);
+          return;
+        }
+        resolve(results);
+      });
+    });
+  }
+  
+  function addMarkers(places) {
+    try { state.directionsRenderer.set('directions', null); } catch {}
+    if (state.markerClusterer) {
+      state.markerClusterer.clearMarkers();
+      state.markerClusterer = null;
+    }
+    state.placeMarkers.forEach(m => m.setMap(null));
+    state.placeMarkers = [];
+    state.placeIdToMarker = {};
+  
+    const info = new google.maps.InfoWindow();
+    places.slice(0, 200).forEach((place, index) => {
+      if (!place.geometry?.location) return;
+      
+      const marker = new google.maps.Marker({
+        position: place.geometry.location,
+        map: state.map,
+        title: place.name,
+        animation: google.maps.Animation.DROP,
+        label: {
+          text: (index + 1).toString(),
+          color: '#fff',
+          fontSize: '14px',
+          fontWeight: 'bold'
+        }
+      });
+      
+      marker.addListener('click', () => {
+        const priceText = typeof place.price_level === 'number' ? '₹'.repeat(place.price_level) : '—';
+        const ratingText = place.rating != null ? place.rating.toFixed(1) : '—';
+        const distanceText = place.distanceMeters != null
+          ? (place.distanceMeters < 1000 ? `${Math.round(place.distanceMeters)} m` : `${(place.distanceMeters / 1000).toFixed(1)} km`)
+          : '';
+        
+        info.setContent(
+          `<div class="min-w-[220px] text-coffee-900">
+            <div class="font-bold text-base mb-1">${place.name || ''}</div>
+            <div class="text-xs text-coffee-600 mb-2">${place.vicinity || place.formatted_address || ''}</div>
+            <div class="flex items-center gap-3 text-xs">
+              <span>⭐ ${ratingText}</span>
+              <span>${priceText || '—'}</span>
+              <span>📍 ${distanceText}</span>
+            </div>
+          </div>`
+        );
+        info.open({ map: state.map, anchor: marker });
+      });
+      
+      state.placeMarkers.push(marker);
+      if (place.place_id) state.placeIdToMarker[place.place_id] = marker;
+    });
+  
+    // Cluster markers if enough of them
+    if (places.length > 10) {
+      try {
+        state.markerClusterer = new markerClusterer.MarkerClusterer({ 
+          map: state.map, 
+          markers: state.placeMarkers,
+          algorithm: new markerClusterer.GridAlgorithm({ maxZoom: 15 })
+        });
+      } catch {}
+    }
+  }
+  
+  function renderResults(places, origin) {
+    const container = document.getElementById('results');
+    const count = document.getElementById('resultCount');
+    const emptyState = document.getElementById('emptyState');
+    
+    if (!container) return;
+  
+    container.innerHTML = '';
+    if (count) count.textContent = String(places.length);
+    
+    if (!places || places.length === 0) {
+      showEmptyState(true);
+      return;
+    }
+    
+    showEmptyState(false);
+  
+    places.forEach((place, index) => {
+      const fallbackUrl = 'https://images.unsplash.com/photo-1501339847302-ac426a36ae57?q=80&w=1200&auto=format&fit=crop';
+      const initialUrl = (place.photos && place.photos.length > 0) 
+        ? place.photos[0].getUrl({ maxWidth: 600, maxHeight: 400 })
+        : fallbackUrl;
+  
+      const distanceText = place.distanceMeters != null
+        ? (place.distanceMeters < 1000 
+          ? `${Math.round(place.distanceMeters)} m` 
+          : `${(place.distanceMeters / 1000).toFixed(1)} km`)
+        : '';
+  
+      const priceText = typeof place.price_level === 'number' ? '₹'.repeat(place.price_level) : 'N/A';
+      const ratingStars = renderStars(place.rating);
+      const reviewCount = place.user_ratings_total || 0;
+      
+      const card = document.createElement('div');
+      card.className = 'result-card group overflow-hidden rounded-xl border border-coffee-200 hover:border-brand-500 bg-white shadow-md hover:shadow-lg transition-all';
+      card.innerHTML = `
+        <div class="flex gap-4 p-4">
+          <img src="${initialUrl}" alt="${place.name}" class="w-28 h-28 object-cover rounded-lg flex-shrink-0 group-hover:brightness-110 transition">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-start justify-between gap-2 mb-1">
+              <h3 class="font-bold text-lg text-coffee-900 truncate hover:underline cursor-pointer details-link">${place.name || 'Cafe'}</h3>
+              <span class="text-xs font-semibold text-coffee-600 whitespace-nowrap ml-2">#${index + 1}</span>
+            </div>
+            <div class="text-sm text-coffee-600 line-clamp-1 mb-2">${place.vicinity || place.formatted_address || ''}</div>
+            
+            <div class="flex flex-wrap items-center gap-2 mb-3">
+              <span class="badge badge-rating">${ratingStars} ${place.rating != null ? place.rating.toFixed(1) : 'N/A'}</span>
+              <span class="badge badge-price">${priceText}</span>
+              ${place.opening_hours?.open_now ? '<span class="badge badge-open">🟢 Open now</span>' : '<span class="text-xs text-coffee-500">Closed</span>'}
+              ${(place.types || []).includes('restaurant') ? '<span class="badge badge-type">🍽️ Restaurant</span>' : '<span class="badge badge-type">☕ Cafe</span>'}
+            </div>
+            
+            <div class="flex items-center gap-2 text-sm text-coffee-600 mb-3">
+              <span>📍 ${distanceText}</span>
+              <span>•</span>
+              <span>💬 ${reviewCount} reviews</span>
+            </div>
+            
+            <div class="flex flex-wrap gap-2">
+              <button class="dir-btn btn-primary px-4 py-2 rounded-lg bg-gradient-to-r from-brand-500 to-coffee-600 hover:from-brand-600 hover:to-coffee-700 text-white text-sm font-semibold transition">📍 Directions</button>
+              <a class="px-4 py-2 rounded-lg border border-coffee-300 text-sm font-medium text-coffee-700 hover:bg-coffee-50 transition smooth-transition" href="${getMapsUrl(place)}" target="_blank" rel="noopener">🗺️ Maps</a>
+            </div>
+          </div>
+        </div>
+      `;
+  
+      const imgEl = card.querySelector('img');
+      if (imgEl && imgEl.src === fallbackUrl) {
+        tryLoadPlacePhoto(place.place_id, imgEl);
+      }
+      
+      card.querySelector('.details-link')?.addEventListener('click', () => {
+        if (!place.place_id || !state.map) return;
+        showPlaceDetails(place.place_id, place.name);
+        const m = place.place_id ? state.placeIdToMarker[place.place_id] : null;
+        if (m) {
+          state.map.panTo(m.getPosition());
+          m.setAnimation(google.maps.Animation.BOUNCE);
+          setTimeout(() => m.setAnimation(null), 700);
+        }
+      });
+  
+      card.querySelector('.dir-btn')?.addEventListener('click', () => {
+        if (!origin || !state.directionsService || !place.geometry?.location?.toJSON) {
+          window.open(getMapsUrl(place), '_blank', 'noopener');
+          return;
+        }
+        showDirections(origin, place.geometry.location.toJSON());
+      });
+  
+      container.appendChild(card);
+    });
+  }
+
+  function getMapsUrl(place) {
+    const query = encodeURIComponent(`${place.name || 'restaurant'} ${place.vicinity || ''}`);
+    return place.place_id
+      ? `https://www.google.com/maps/search/?api=1&query=${query}&query_place_id=${place.place_id}`
+      : `https://www.google.com/maps/search/?api=1&query=${query}`;
+  }
+
+  function renderFallbackResults(message) {
+    state.googleMapsFailed = true;
+    state.isSearching = false;
+    showSkeletons(false);
+    showMapMessage(message);
+
+    const origin = state.userLocation || { lat: 28.6139, lng: 77.2090 };
+    const keyword = document.getElementById('queryInput')?.value?.trim().toLowerCase() || '';
+    const minRating = parseFloat(document.getElementById('ratingFilter')?.value || '0');
+    const priceStr = document.getElementById('priceFilter')?.value || '';
+    const openNow = document.getElementById('openNowFilter')?.checked || false;
+
+    const filtered = fallbackPlaces.filter(place => {
+      const haystack = `${place.name} ${place.vicinity} ${(place.types || []).join(' ')}`.toLowerCase();
+      if (keyword && !haystack.includes(keyword)) return false;
+      if ((place.rating || 0) < minRating) return false;
+      if (priceStr && place.price_level !== parseInt(priceStr, 10)) return false;
+      if (openNow && !place.opening_hours?.open_now) return false;
+      return true;
+    });
+
+    renderResults(filtered, origin);
+  }
+
+  function showMapMessage(message) {
+    const mapEl = document.getElementById('map');
+    if (!mapEl) return;
+    mapEl.innerHTML = `
+      <div class="h-full w-full grid place-content-center bg-coffee-50 text-center p-8">
+        <div class="mx-auto mb-4 h-12 w-12 rounded-full bg-amber-100 text-amber-700 grid place-content-center font-bold">!</div>
+        <h3 class="text-xl font-bold text-coffee-900 mb-2">Google Maps did not load</h3>
+        <p class="text-sm text-coffee-700 max-w-sm">${message}</p>
+      </div>
+    `;
+  }
+  
+  function showEmptyState(show, message = null) {
+    const emptyState = document.getElementById('emptyState');
+    const results = document.getElementById('results');
+    if (!emptyState || !results) return;
+    
+    if (show) {
+      emptyState.classList.remove('hidden');
+      results.classList.add('hidden');
+      
+      if (message) {
+        emptyState.innerHTML = `
+          <div class="text-6xl mb-4">☕</div>
+          <h3 class="text-xl font-bold text-coffee-900 mb-2">No cafés found</h3>
+          <p class="text-coffee-600 mb-6 max-w-sm">${message}</p>
+          <div class="space-y-2 text-sm text-coffee-700">
+            <button class="block text-brand-600 hover:text-brand-700 font-medium">↑ Increase search radius</button>
+            <button class="block text-brand-600 hover:text-brand-700 font-medium">↓ Lower rating filter</button>
+            <button class="block text-brand-600 hover:text-brand-700 font-medium">🔄 Remove filters</button>
+          </div>
+        `;
+      }
+    } else {
+      emptyState.classList.add('hidden');
+      results.classList.remove('hidden');
+    }
+  }
+  
+  function showDirections(origin, destination) {
+    state.directionsService.route(
+      {
+        origin,
+        destination,
+        travelMode: google.maps.TravelMode.WALKING
+      },
+      (result, status) => {
+        if (status === google.maps.DirectionsStatus.OK) {
+          state.directionsRenderer.setDirections(result);
+        } else {
+          alert('Unable to get directions. Please try again.');
+        }
+      }
+    );
+  }
+  
+  function cacheResults(results, userLocation) {
+    try {
+      const toStore = results.map(r => ({
+        name: r.name,
+        vicinity: r.vicinity,
+        rating: r.rating,
+        price_level: r.price_level,
+        types: r.types,
+        geometry: { location: r.geometry.location.toJSON() },
+        place_id: r.place_id,
+        distanceMeters: r.distanceMeters,
+        user_ratings_total: r.user_ratings_total,
+        opening_hours: r.opening_hours
+      }));
+      localStorage.setItem('lastCafeResults', JSON.stringify({ results: toStore, userLocation, timestamp: Date.now() }));
+    } catch (e) {
+      console.warn('Cache error:', e);
+    }
+  }
+  
+  function loadCachedResults() {
+    try {
+      const raw = localStorage.getItem('lastCafeResults');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      const age = Date.now() - (parsed.timestamp || 0);
+      if (age > 3600000) return null; // 1 hour cache
+      parsed.results = parsed.results.map(r => ({
+        ...r,
+        geometry: { location: new google.maps.LatLng(r.geometry.location.lat, r.geometry.location.lng) }
+      }));
+      return parsed;
+    } catch {
+      return null;
+    }
+  }
+  
+  function tryLoadPlacePhoto(placeId, imgEl) {
+    if (!placeId || !state.placesService?.getDetails) return;
+    state.placesService.getDetails({ placeId, fields: ['photos'] }, (place, status) => {
+      if (status !== google.maps.places.PlacesServiceStatus.OK || !place || !place.photos || !place.photos.length) return;
+      try {
+        const url = place.photos[0].getUrl({ maxWidth: 800, maxHeight: 600 });
+        if (url && imgEl) imgEl.src = url;
+      } catch (e) {
+        console.warn('Photo load error:', e);
+      }
+    });
+  }
+  
+  function openModal(contentHtml, title) {
+    const modal = document.getElementById('detailsModal');
+    const body = document.getElementById('detailsBody');
+    const heading = document.getElementById('detailsTitle');
+    if (!modal || !body || !heading) return;
+    heading.textContent = title || 'Details';
+    body.innerHTML = contentHtml || '';
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+  }
+  
+  function closeModal() {
+    const modal = document.getElementById('detailsModal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.style.overflow = '';
+  }
+  
+  document.getElementById('detailsClose')?.addEventListener('click', closeModal);
+  
+  document.getElementById('detailsModal')?.addEventListener('click', e => {
+    if (e.target && e.target === document.getElementById('detailsModal')) closeModal();
+  });
+  
+  function showSkeletons(show) {
+    const res = document.getElementById('results');
+    const sk = document.getElementById('resultsSkeleton');
+    const empty = document.getElementById('emptyState');
+    if (!res || !sk) return;
+    if (show) { 
+      sk.classList.remove('hidden'); 
+      res.classList.add('hidden');
+      if (empty) empty.classList.add('hidden');
+    } else { 
+      sk.classList.add('hidden'); 
+      res.classList.remove('hidden');
+    }
+  }
+  
+  function renderStars(rating) {
+    if (!rating) return '☆☆☆☆☆';
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    return '★'.repeat(Math.min(fullStars, 5)) + (hasHalfStar ? '★' : '') + '☆'.repeat(Math.max(emptyStars, 0));
+  }
+  
+  function initHero() {
+    const startBtn = document.getElementById('startSearchBtn');
+    const heroSection = document.getElementById('heroSection');
+    const mainContent = document.getElementById('mainContent');
+    const searchSection = document.getElementById('searchSection');
+    const mainHeader = document.getElementById('mainHeader');
+    
+    if (startBtn && heroSection && mainContent && searchSection && mainHeader) {
+      startBtn.addEventListener('click', () => {
+        heroSection.style.display = 'none';
+        mainHeader.style.display = 'none';
+        mainContent.classList.remove('hidden');
+        searchSection.classList.remove('hidden');
+      });
+    }
+  }
+  
+  function init() {
+    initHero();
+    bindUI();
+    loadGoogleMapsScript();
+  }
+  
+  // Check if DOM is already loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  function loadGoogleMapsScript() {
+    const apiKey = getGoogleMapsApiKey();
+    
+    if (!apiKey) {
+      renderFallbackResults('Google Maps API key is missing. Add it to src/config.js or open the page with ?googleMapsKey=YOUR_KEY.');
+      return;
+    }
+    
+    if (document.getElementById('google-maps-script')) return;
+    const script = document.createElement('script');
+    script.id = 'google-maps-script';
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry,marker&callback=initMap`;
+    script.async = true;
+    script.defer = true;
+    script.onerror = () => {
+      renderFallbackResults('The Google Maps script could not be downloaded. Check your network connection or API key restrictions.');
+    };
+    document.body.appendChild(script);
+  }
+
+  window.initMap = initMap;
+  window.gm_authFailure = () => {
+    renderFallbackResults(`Google rejected the Maps API key for ${getCurrentOriginLabel()}. Enable Maps JavaScript API and Places API, turn on billing, and allow this origin in key restrictions.`);
+  };
+
+  function getGoogleMapsApiKey() {
+    const params = new URLSearchParams(window.location.search);
+    const keyFromUrl = params.get('googleMapsKey');
+    if (keyFromUrl) {
+      localStorage.setItem('googleMapsApiKey', keyFromUrl.trim());
+      return keyFromUrl.trim();
+    }
+
+    const keyFromStorage = localStorage.getItem('googleMapsApiKey');
+    if (keyFromStorage) return keyFromStorage.trim();
+
+    return (window.GOOGLE_MAPS_API_KEY || '').trim();
+  }
+
+  function getCurrentOriginLabel() {
+    if (window.location.protocol === 'file:') return 'file:// pages';
+    return window.location.origin;
+  }
+  
+  function showPlaceDetails(placeId, placeName) {
+    if (!state.placesService) return;
+    
+    state.placesService.getDetails(
+      {
+        placeId,
+        fields: ['name', 'formatted_address', 'formatted_phone_number', 'opening_hours', 'rating', 'user_ratings_total', 'url', 'photos', 'price_level', 'reviews', 'website']
+      },
+      (place, status) => {
+        if (status !== google.maps.places.PlacesServiceStatus.OK || !place) {
+          console.warn('Place details error:', status);
+          return;
+        }
+
+        let photosHtml = '';
+        if (place.photos && place.photos.length > 0) {
+          photosHtml = '<div class="grid grid-cols-2 gap-3 mb-5">';
+          place.photos.slice(0, 4).forEach(photo => {
+            const url = photo.getUrl({ maxWidth: 300, maxHeight: 300 });
+            photosHtml += `<img src="${url}" alt="Photo" class="w-full h-32 object-cover rounded-lg" />`;
+          });
+          photosHtml += '</div>';
+        }
+
+        const hours = place.opening_hours?.weekday_text || [];
+        const hoursHtml = hours.length > 0 
+          ? `<div class="space-y-1 text-sm"><strong>Hours:</strong><div class="text-coffee-600">${hours.join('<br>')}</div></div>`
+          : '';
+
+        const reviewsHtml = place.reviews && place.reviews.length > 0
+          ? `<div class="space-y-3 mt-4">
+              <strong>Recent Reviews:</strong>
+              ${place.reviews.slice(0, 3).map(review => `
+                <div class="border-l-2 border-brand-500 pl-3 py-2">
+                  <div class="flex items-center gap-2 text-sm">
+                    <strong>${review.author_name}</strong>
+                    <span class="text-xs text-coffee-600">${review.relative_time_description}</span>
+                  </div>
+                  <div class="text-sm text-coffee-600">${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}</div>
+                  <p class="text-sm mt-1 text-coffee-700">${review.text.substring(0, 150)}...</p>
+                </div>
+              `).join('')}
+            </div>`
+          : '';
+
+        const priceText = place.price_level ? '₹'.repeat(place.price_level) : 'N/A';
+        const ratingText = place.rating ? `${place.rating.toFixed(1)} ⭐ (${place.user_ratings_total || 0} reviews)` : 'No rating';
+
+        const contentHtml = `
+          ${photosHtml}
+          <div class="space-y-4">
+            <div>
+              <h4 class="text-sm font-semibold text-coffee-700 mb-2">📍 Location</h4>
+              <p class="text-sm text-coffee-600">${place.formatted_address || 'N/A'}</p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <h4 class="text-sm font-semibold text-coffee-700 mb-2">⭐ Rating</h4>
+                <p class="text-sm text-coffee-600">${ratingText}</p>
+              </div>
+              <div>
+                <h4 class="text-sm font-semibold text-coffee-700 mb-2">💰 Price</h4>
+                <p class="text-sm text-coffee-600">${priceText}</p>
+              </div>
+            </div>
+            
+            ${place.formatted_phone_number ? `<div>
+              <h4 class="text-sm font-semibold text-coffee-700 mb-2">📱 Phone</h4>
+              <p class="text-sm"><a href="tel:${place.formatted_phone_number}" class="text-brand-600 hover:underline">${place.formatted_phone_number}</a></p>
+            </div>` : ''}
+            
+            ${hoursHtml}
+            
+            ${place.website ? `<div>
+              <h4 class="text-sm font-semibold text-coffee-700 mb-2">🌐 Website</h4>
+              <p class="text-sm"><a href="${place.website}" target="_blank" class="text-brand-600 hover:underline">Visit website</a></p>
+            </div>` : ''}
+            
+            ${reviewsHtml}
+            
+            <div class="flex gap-2 pt-4">
+              <a href="${place.url}" target="_blank" class="flex-1 px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-lg hover:bg-brand-600 transition text-center">Open in Google Maps</a>
+            </div>
+          </div>
+        `;
+
+        openModal(contentHtml, place.name);
+      }
+    );
+  }
+
+  // ---------------------------------------------------------------------
+  // V2 ADDITION (additive only — nothing above this line was changed):
+  // expose read-only references so src/enhance.js can layer the new AI
+  // features on top of this exact code without editing any function above.
+  // ---------------------------------------------------------------------
+  window.CafeFinderInternal = { state, renderResults, addMarkers, showPlaceDetails, findNearbyCafes };
+    </script>
+    <!-- V2 addition: heuristic AI engine + enhancement layer, inlined so there is nothing
+         external to fetch/cache/misplace. Purely additive — see comments inside. -->
+    <script>
+/**
+ * Cafe Finder V2 — Intelligence Engine
+ * --------------------------------------------------
+ * Pure, dependency-free heuristic functions that power the AI Ranking Engine,
+ * Study/Meeting modes, review summarization, peak-hour & crowd prediction,
+ * budget intelligence, and menu-item suggestions described in the V2 spec.
+ *
+ * NOTHING in this file touches the DOM or the existing app.js state. It only
+ * reads plain Google Places result/details objects and returns plain data,
+ * so it is 100% additive to the existing app.
+ *
+ * Every function here is intentionally heuristic (rating, price, review
+ * keyword matching, seeded pseudo-randomness for signals we don't have real
+ * data for). Each is written so the *inputs/outputs* stay stable if a real
+ * LLM or a richer data source replaces the internals later — see the
+ * "REPLACEABLE" markers below.
+ */
+(function (global) {
+  'use strict';
+
+  // ---------------------------------------------------------------------
+  // Deterministic "seeded randomness" so the same cafe always gets the same
+  // simulated signals across renders/sessions (until real data replaces it).
+  // ---------------------------------------------------------------------
+  function makeSeededRng(seedStr) {
+    let h = 2166136261 >>> 0;
+    const str = String(seedStr || 'cafe');
+    for (let i = 0; i < str.length; i++) {
+      h = Math.imul(h ^ str.charCodeAt(i), 16777619);
+    }
+    return function next() {
+      h = Math.imul(h ^ (h >>> 15), 2246822519);
+      h = Math.imul(h ^ (h >>> 13), 3266489917);
+      h ^= h >>> 16;
+      return (h >>> 0) / 4294967296;
+    };
+  }
+
+  function seedFor(place) {
+    return (place && (place.place_id || place.name)) || 'cafe';
+  }
+
+  function clamp(n, min, max) {
+    return Math.max(min, Math.min(max, n));
+  }
+
+  // ---------------------------------------------------------------------
+  // Keyword lexicons used to scan whatever review text we *do* have access
+  // to (Place Details `reviews[].text`). When no review text is available
+  // (plain nearby/text search results don't include it) we fall back to
+  // rating + price + seeded signals only.
+  // ---------------------------------------------------------------------
+  const LEXICON = {
+    wifi: ['wifi', 'wi-fi', 'internet', 'charging', 'plug point', 'power outlet'],
+    quiet: ['quiet', 'peaceful', 'calm', 'cozy', 'silent', 'work', 'laptop', 'study', 'studying'],
+    noisy: ['loud', 'noisy', 'crowded', 'packed', 'chaotic'],
+    romantic: ['romantic', 'date', 'ambience', 'lighting', 'decor', 'aesthetic', 'view', 'intimate', 'cosy'],
+    family: ['family', 'kids', 'kid-friendly', 'children', 'highchair', 'spacious', 'parking'],
+    group: ['group', 'large table', 'birthday', 'party', 'celebration', 'friends', 'hangout'],
+    professional: ['meeting', 'professional', 'business', 'discussion', 'work call', 'conference'],
+    service: ['service', 'staff', 'waiter', 'server'],
+    slowService: ['slow service', 'slow staff', 'wait long', 'took forever', 'understaffed'],
+    parkingIssue: ['no parking', 'parking issue', 'parking problem', 'limited parking'],
+    priceComplaint: ['expensive', 'overpriced', 'pricey'],
+    tastePositive: ['delicious', 'tasty', 'great coffee', 'good coffee', 'amazing food', 'flavour', 'flavor'],
+    ambiencePositive: ['lovely ambience', 'great ambience', 'beautiful', 'aesthetic', 'cozy', 'nice vibe', 'great vibe']
+  };
+
+  function countMatches(text, words) {
+    if (!text) return 0;
+    const t = text.toLowerCase();
+    let count = 0;
+    for (const w of words) {
+      if (t.indexOf(w) !== -1) count++;
+    }
+    return count;
+  }
+
+  function collectReviewText(place) {
+    if (!place || !Array.isArray(place.reviews)) return '';
+    return place.reviews.map(r => r.text || '').join(' \n ');
+  }
+
+  // ---------------------------------------------------------------------
+  // 1. AI RANKING ENGINE
+  // REPLACEABLE: swap the body of `scoreCafe` for an LLM call that takes the
+  // same `place` object (+ review text) and returns the same score shape.
+  // ---------------------------------------------------------------------
+  function scoreCafe(place) {
+    const rng = makeSeededRng(seedFor(place));
+    const rating = typeof place.rating === 'number' ? place.rating : 3.8 + rng() * 0.6;
+    const reviewCount = place.user_ratings_total || Math.round(50 + rng() * 900);
+    const price = typeof place.price_level === 'number' ? place.price_level : Math.round(1 + rng() * 2);
+    const types = (place.types || []).join(' ').toLowerCase();
+    const reviewText = collectReviewText(place);
+    const hasRealReviewText = reviewText.length > 0;
+
+    // Base confidence from rating (0-60) and review volume (0-15, log scale)
+    const ratingBase = clamp((rating / 5) * 60, 0, 60);
+    const volumeBoost = clamp(Math.log10(reviewCount + 1) * 5, 0, 15);
+
+    // Keyword signals — real if we have review text, otherwise a plausible
+    // seeded approximation so cards never look empty/identical.
+    const sig = name => {
+      if (hasRealReviewText) return countMatches(reviewText, LEXICON[name]);
+      // Simulated signal: biased by rating/price so it still feels coherent
+      return rng() * 2.2;
+    };
+
+    const wifiSig = sig('wifi');
+    const quietSig = sig('quiet');
+    const noisySig = sig('noisy');
+    const romanticSig = sig('romantic');
+    const familySig = sig('family');
+    const groupSig = sig('group');
+    const proSig = sig('professional');
+
+    const kw = (positive, negative) => clamp((positive - negative) * 4, -10, 25);
+
+    const work = clamp(
+      ratingBase * 0.55 + volumeBoost * 0.6 + kw(wifiSig + quietSig, noisySig) + (price <= 2 ? 5 : 0),
+      5, 100
+    );
+    const student = clamp(
+      ratingBase * 0.45 + volumeBoost * 0.5 + kw(wifiSig + quietSig, noisySig) + (price <= 2 ? 12 : price >= 4 ? -10 : 2),
+      5, 100
+    );
+    const date = clamp(
+      ratingBase * 0.75 + volumeBoost * 0.3 + kw(romanticSig, noisySig * 0.5) + (price >= 3 ? 6 : -2),
+      5, 100
+    );
+    const family = clamp(
+      ratingBase * 0.6 + volumeBoost * 0.4 + kw(familySig, 0) + (types.includes('restaurant') ? 5 : 0),
+      5, 100
+    );
+    const group = clamp(
+      ratingBase * 0.55 + volumeBoost * 0.45 + kw(groupSig, 0) + (price <= 3 ? 4 : 0),
+      5, 100
+    );
+    const meeting = clamp(
+      ratingBase * 0.6 + volumeBoost * 0.55 + kw(proSig + quietSig, noisySig) + (reviewCount > 300 ? 5 : 0),
+      5, 100
+    );
+
+    return {
+      work: Math.round(work),
+      student: Math.round(student),
+      date: Math.round(date),
+      family: Math.round(family),
+      group: Math.round(group),
+      meeting: Math.round(meeting),
+      _confidence: hasRealReviewText ? 'review-based' : 'heuristic-estimate'
+    };
+  }
+
+  const CATEGORY_META = {
+    work: { label: 'Best For Work', emoji: '💻' },
+    student: { label: 'Best For Students', emoji: '📚' },
+    date: { label: 'Best For Dates', emoji: '❤️' },
+    family: { label: 'Best For Family', emoji: '👨‍👩‍👧‍👦' },
+    group: { label: 'Best For Groups', emoji: '👥' },
+    meeting: { label: 'Best For Meetings', emoji: '🤝' }
+  };
+
+  function overallScore(scores) {
+    const vals = Object.keys(CATEGORY_META).map(k => scores[k] || 0);
+    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const peak = Math.max.apply(null, vals);
+    return Math.round(avg * 0.6 + peak * 0.4);
+  }
+
+  function bestForTags(scores, limit) {
+    limit = limit || 2;
+    return Object.keys(CATEGORY_META)
+      .map(key => ({ key, ...CATEGORY_META[key], score: scores[key] || 0 }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit);
+  }
+
+  // ---------------------------------------------------------------------
+  // 2. STUDY MODE / MEETING MODE reasoning strings
+  // ---------------------------------------------------------------------
+  function studyReason(scores) {
+    const bits = [];
+    if (scores.student >= 80) bits.push('Strong WiFi & quiet environment');
+    else if (scores.student >= 60) bits.push('Decent WiFi, moderate noise');
+    else bits.push('Limited workspace comfort');
+    bits.push(scores.student >= 70 ? 'good for long study sessions' : 'better for short visits');
+    return bits.join(', ') + '.';
+  }
+
+  function meetingReason(scores) {
+    const bits = [];
+    bits.push(scores.meeting >= 80 ? 'Professional, low-noise atmosphere' : scores.meeting >= 60 ? 'Reasonably quiet, decent seating' : 'Can get busy/noisy');
+    bits.push(scores.meeting >= 75 ? 'ideal for discussions' : 'okay for casual chats');
+    return bits.join(', ') + '.';
+  }
+
+  // ---------------------------------------------------------------------
+  // 3. BUDGET INTELLIGENCE
+  // ---------------------------------------------------------------------
+  const BUDGET_TIERS = [
+    { level: 1, symbol: '₹', label: 'Budget', min: 100, max: 300 },
+    { level: 2, symbol: '₹₹', label: 'Moderate', min: 250, max: 600 },
+    { level: 3, symbol: '₹₹₹', label: 'Premium', min: 500, max: 1000 },
+    { level: 4, symbol: '₹₹₹₹', label: 'Luxury', min: 900, max: 2000 }
+  ];
+
+  function estimateBudget(place) {
+    const rng = makeSeededRng(seedFor(place) + '-budget');
+    const level = clamp(typeof place.price_level === 'number' ? place.price_level : 2, 1, 4);
+    const tier = BUDGET_TIERS[level - 1];
+    const avg = Math.round((tier.min + rng() * (tier.max - tier.min)) / 10) * 10;
+    return {
+      level: tier.level,
+      symbol: tier.symbol,
+      label: tier.label,
+      avgCostPerPerson: avg,
+      rangeLabel: `₹${tier.min}–₹${tier.max}`
+    };
+  }
+
+  function matchesBudgetBracket(estimate, bracketKey) {
+    const v = estimate.avgCostPerPerson;
+    switch (bracketKey) {
+      case 'under200': return v < 200;
+      case '200-500': return v >= 200 && v <= 500;
+      case '500-1000': return v > 500 && v <= 1000;
+      case '1000plus': return v > 1000;
+      default: return true;
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // 4. PEAK HOUR ANALYSIS + 5. CROWD PREDICTION
+  // REPLACEABLE: swap for real Google "Popular Times" data when available.
+  // ---------------------------------------------------------------------
+  function generatePeakProfile(place) {
+    const rng = makeSeededRng(seedFor(place) + '-peak');
+    // Slight variation per cafe so the whole list doesn't look identical.
+    const morningStart = 7 + Math.round(rng() * 2); // 7-9
+    const morningEnd = morningStart + 2;
+    const eveningStart = 16 + Math.round(rng() * 2); // 16-18
+    const eveningEnd = eveningStart + 3;
+    return {
+      windows: [
+        { startHour: morningStart, endHour: morningEnd, label: formatHourRange(morningStart, morningEnd) },
+        { startHour: eveningStart, endHour: eveningEnd, label: formatHourRange(eveningStart, eveningEnd) }
+      ],
+      bestWindow: { startHour: morningEnd + 1, endHour: eveningStart - 1, label: formatHourRange(morningEnd + 1, eveningStart - 1) }
+    };
+  }
+
+  function formatHourRange(startHour, endHour) {
+    return `${formatHour(startHour)} – ${formatHour(endHour)}`;
+  }
+  function formatHour(h) {
+    const hh = ((h % 24) + 24) % 24;
+    const period = hh >= 12 ? 'PM' : 'AM';
+    let display = hh % 12;
+    if (display === 0) display = 12;
+    return `${display}:00 ${period}`;
+  }
+
+  function loadLevelForHour(peakProfile, hour) {
+    for (const w of peakProfile.windows) {
+      if (hour >= w.startHour && hour < w.endHour) return 'High';
+      if (hour === w.startHour - 1 || hour === w.endHour) return 'Moderate';
+    }
+    return 'Low';
+  }
+
+  const LOAD_META = {
+    Low: { emoji: '🟢', color: '#16a34a' },
+    Moderate: { emoji: '🟡', color: '#d97706' },
+    High: { emoji: '🔴', color: '#dc2626' }
+  };
+
+  function predictCrowd(place, now) {
+    now = now || new Date();
+    const peak = generatePeakProfile(place);
+    const hourNow = now.getHours();
+    const current = loadLevelForHour(peak, hourNow);
+    const in1h = loadLevelForHour(peak, (hourNow + 1) % 24);
+    const in3h = loadLevelForHour(peak, (hourNow + 3) % 24);
+    return {
+      peak,
+      current: { level: current, ...LOAD_META[current] },
+      in1h: { level: in1h, ...LOAD_META[in1h] },
+      in3h: { level: in3h, ...LOAD_META[in3h] }
+    };
+  }
+
+  // ---------------------------------------------------------------------
+  // 6. MOST ORDERED ITEMS ("Top Picks") + 7. SIGNATURE ITEMS ("Must Try")
+  // REPLACEABLE: swap with real POS/menu data when available.
+  // ---------------------------------------------------------------------
+  const COMMON_ITEMS = [
+    'Cappuccino', 'Cafe Latte', 'Cold Brew', 'Hazelnut Latte', 'Filter Coffee',
+    'Americano', 'Iced Mocha', 'Masala Chai', 'Croissant', 'Blueberry Cheesecake',
+    'Avocado Toast', 'Club Sandwich', 'Pasta Alfredo', 'Brownie', 'Lemonade'
+  ];
+  const SIGNATURE_ITEMS = [
+    'Vietnamese Coffee', 'Tiramisu', 'Mocha Shake', 'Affogato', 'Sea Salt Latte',
+    'Burnt Caramel Cold Brew', 'Belgian Waffle', 'Matcha Latte', 'Filter Kaapi',
+    'Dark Chocolate Lava Cake', "Chef's Special Cold Coffee", 'Rose Pistachio Latte'
+  ];
+
+  function pickUnique(pool, rng, count) {
+    const copy = pool.slice();
+    const out = [];
+    while (out.length < count && copy.length) {
+      const idx = Math.floor(rng() * copy.length);
+      out.push(copy.splice(idx, 1)[0]);
+    }
+    return out;
+  }
+
+  function generateMenuHighlights(place) {
+    const rng = makeSeededRng(seedFor(place) + '-menu');
+    return {
+      topPicks: pickUnique(COMMON_ITEMS, rng, 4),
+      mustTry: pickUnique(SIGNATURE_ITEMS, rng, 3)
+    };
+  }
+
+  // ---------------------------------------------------------------------
+  // 8. AI REVIEW SUMMARIZATION
+  // REPLACEABLE: swap the body for an LLM call over `place.reviews`.
+  // ---------------------------------------------------------------------
+  function summarizeReviews(place) {
+    const reviewText = collectReviewText(place);
+    if (!reviewText) {
+      // No review text available from this API call — fall back to a
+      // rating/price-driven generic but still useful summary.
+      const rating = place.rating || 4.2;
+      const tone = rating >= 4.5 ? 'Highly rated by visitors' : rating >= 4.0 ? 'Generally well liked' : 'Mixed feedback from visitors';
+      return {
+        positives: ['Coffee quality', 'Ambience'],
+        complaints: ['Limited data — open the listing for full reviews'],
+        summary: `${tone}. Full review text wasn't available for this listing, so this summary is based on its overall rating and price tier.`
+      };
+    }
+
+    const positives = [];
+    if (countMatches(reviewText, LEXICON.tastePositive) > 0) positives.push('Coffee & food quality');
+    if (countMatches(reviewText, LEXICON.ambiencePositive) > 0 || countMatches(reviewText, LEXICON.romantic) > 0) positives.push('Ambience');
+    if (countMatches(reviewText, LEXICON.service) > countMatches(reviewText, LEXICON.slowService)) positives.push('Service');
+    if (countMatches(reviewText, LEXICON.quiet) > 0) positives.push('Comfortable seating / quiet space');
+    if (!positives.length) positives.push('Overall experience');
+
+    const complaints = [];
+    if (countMatches(reviewText, LEXICON.slowService) > 0) complaints.push('Slow service during peak hours');
+    if (countMatches(reviewText, LEXICON.parkingIssue) > 0) complaints.push('Limited parking');
+    if (countMatches(reviewText, LEXICON.priceComplaint) > 0) complaints.push('On the pricier side');
+    if (countMatches(reviewText, LEXICON.noisy) > 0) complaints.push('Can get noisy/crowded');
+    if (!complaints.length) complaints.push('No major recurring complaints found');
+
+    const summary = `Customers love the ${positives.join(', ').toLowerCase()}. ${complaints[0] !== 'No major recurring complaints found' ? 'Common complaints include ' + complaints.join(', ').toLowerCase() + '.' : 'No major recurring complaints found in available reviews.'}`;
+
+    return { positives, complaints, summary };
+  }
+
+  // ---------------------------------------------------------------------
+  // 9. RATING BREAKDOWN (simulated distribution — Places JS API doesn't
+  // expose the real per-star histogram)
+  // ---------------------------------------------------------------------
+  function ratingBreakdown(place) {
+    const rating = place.rating || 4.2;
+    const rng = makeSeededRng(seedFor(place) + '-stars');
+    // Skew a distribution so its weighted average ~= rating
+    const weights = [5, 4, 3, 2, 1].map(star => {
+      const closeness = 1 - Math.abs(star - rating) / 4;
+      return Math.max(0.02, closeness + rng() * 0.08);
+    });
+    const total = weights.reduce((a, b) => a + b, 0);
+    return [5, 4, 3, 2, 1].map((star, i) => ({
+      star,
+      pct: Math.round((weights[i] / total) * 100)
+    }));
+  }
+
+  // ---------------------------------------------------------------------
+  // 10. PERSONALIZED SEARCH PROFILES
+  // ---------------------------------------------------------------------
+  const PROFILES = {
+    student: { label: 'Student', emoji: '🎓', primaryScore: 'student' },
+    remote_worker: { label: 'Remote Worker', emoji: '💻', primaryScore: 'work' },
+    family: { label: 'Family', emoji: '👨‍👩‍👧‍👦', primaryScore: 'family' },
+    couple: { label: 'Couple', emoji: '❤️', primaryScore: 'date' },
+    friends_group: { label: 'Friends Group', emoji: '👥', primaryScore: 'group' },
+    business_professional: { label: 'Business Professional', emoji: '🤝', primaryScore: 'meeting' }
+  };
+
+  // ---------------------------------------------------------------------
+  // Public API
+  // ---------------------------------------------------------------------
+  global.CafeIntel = {
+    scoreCafe,
+    overallScore,
+    bestForTags,
+    CATEGORY_META,
+    studyReason,
+    meetingReason,
+    estimateBudget,
+    matchesBudgetBracket,
+    generatePeakProfile,
+    predictCrowd,
+    LOAD_META,
+    generateMenuHighlights,
+    summarizeReviews,
+    ratingBreakdown,
+    PROFILES
+  };
+})(window);
+
+/**
+ * Cafe Finder V2 — Enhancement Layer
+ * --------------------------------------------------
+ * This script is 100% additive. It never edits, wraps, or redefines any
+ * function inside the original inline app script. Instead it:
+ *   1. Reads a tiny read-only handle the original script exposes at the very
+ *      end of its file: `window.CafeFinderInternal = { state, renderResults,
+ *      addMarkers, showPlaceDetails }`. Nothing about how those functions
+ *      work was changed — they're just referenced.
+ *   2. Watches the existing DOM (#results, #detailsBody) with
+ *      MutationObservers and layers new markup on top whenever the original
+ *      code re-renders something.
+ *   3. Adds brand-new UI (mode/profile/budget chips, compare bar, comparison
+ *      modal) into empty space in the existing layout.
+ *
+ * If `window.CafeFinderInternal` / `window.CafeIntel` are missing for any
+ * reason, this file quietly no-ops — the original app keeps working exactly
+ * as before.
+ */
+(function () {
+  'use strict';
+
+  function ready(fn) {
+    if (document.readyState !== 'loading') fn();
+    else document.addEventListener('DOMContentLoaded', fn);
+  }
+
+  function waitForHooks(cb, tries) {
+    tries = tries || 0;
+    if (window.CafeFinderInternal && window.CafeFinderInternal.state && window.CafeIntel) {
+      return cb();
+    }
+    if (tries > 200) {
+      console.warn('Cafe Finder V2 enhancements: required hooks not found — skipping (original app is unaffected).');
+      return;
+    }
+    setTimeout(() => waitForHooks(cb, tries + 1), 50);
+  }
+
+  ready(function () {
+    try {
+      waitForHooks(initEnhancements);
+    } catch (e) {
+      console.warn('Cafe Finder V2 enhancements failed to start:', e);
+    }
+  });
+
+  function initEnhancements() {
+    const CFI = window.CafeFinderInternal;
+    const Intel = window.CafeIntel;
+    const state = CFI.state;
+
+    let baseResults = [];
+    let modeRenderInProgress = false;
+    let activeMode = 'default';
+    let activeProfile = null;
+    let activeBudgetBracket = null;
+    let pendingDashboardPlace = null;
+    const compareMap = new Map();
+    const cardPlaceMap = new WeakMap();
+
+    safe(injectModePanel);
+    safe(setupLayoutSync);
+    safe(setupCollapsibleNavbar);
+    safe(injectCompareBar);
+    safe(injectComparisonModal);
+    safe(observeResults);
+    safe(observeDetailsModal);
+
+    // ------------------------------------------------------------------
+    // Layout fix: #searchSection is `position: fixed`, and the original
+    // markup reserves space for it with a hardcoded `margin-top: 120px` on
+    // #mainContent. Our new mode/profile/budget rows made the bar taller
+    // than 120px, so without this it overlaps the map + results. Instead
+    // of editing that inline style in index.html, we keep #mainContent's
+    // offset in sync with the bar's *real* height at all times (initial
+    // load, window resize, chip rows wrapping on narrow screens, etc).
+    // ------------------------------------------------------------------
+    function setupLayoutSync() {
+      const searchSection = document.getElementById('searchSection');
+      const mainContent = document.getElementById('mainContent');
+      if (!searchSection || !mainContent) return;
+
+      function sync() {
+        if (searchSection.classList.contains('hidden')) return;
+        const h = searchSection.offsetHeight;
+        if (h > 0) mainContent.style.marginTop = h + 'px';
+      }
+
+      if (typeof ResizeObserver !== 'undefined') {
+        const ro = new ResizeObserver(() => sync());
+        ro.observe(searchSection);
+      }
+      window.addEventListener('resize', sync);
+
+      // Catch the hero -> main-content reveal (class toggle) and any late
+      // font/layout settling.
+      sync();
+      setTimeout(sync, 50);
+      setTimeout(sync, 300);
+      setTimeout(sync, 1000);
+
+      document.getElementById('startSearchBtn')?.addEventListener('click', () => {
+        setTimeout(sync, 0);
+        setTimeout(sync, 50);
+      });
+    }
+
+    function safe(fn) {
+      try { fn(); } catch (e) { console.warn('Cafe Finder V2 enhancement error:', e); }
+    }
+
+    // ------------------------------------------------------------------
+    // Collapsible / hover-to-reveal navbar.
+    // By default the search bar shows only its top row (search box +
+    // locate/nearby buttons). Hovering anywhere over it (desktop) expands
+    // it to reveal category chips, filters, and the mode/profile/budget
+    // panel; moving the mouse away collapses it again. Since touch devices
+    // have no hover, a small pull-tab handle lets you tap to expand/
+    // collapse instead, and tapping outside the bar collapses it.
+    // Re-uses the same ResizeObserver-driven height logic as the layout
+    // fix above, so #mainContent automatically slides up/down with it.
+    // ------------------------------------------------------------------
+    function setupCollapsibleNavbar() {
+      const searchSection = document.getElementById('searchSection');
+      const container = searchSection && searchSection.querySelector(':scope > div');
+      if (!searchSection || !container) return;
+
+      const firstRow = container.querySelector('.flex.flex-col.gap-4 > div:first-child') || container;
+      searchSection.classList.add('cf-collapsible');
+
+      const handle = document.createElement('button');
+      handle.type = 'button';
+      handle.id = 'cfNavHandle';
+      handle.className = 'cf-nav-handle';
+      handle.setAttribute('aria-expanded', 'false');
+      handle.setAttribute('aria-label', 'Show filters and modes');
+      handle.innerHTML = '<span class="cf-nav-handle-chevron">▾</span><span>Filters & Modes</span>';
+      searchSection.appendChild(handle);
+
+      let collapseTimer = null;
+
+      function hoverCapable() {
+        return window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+      }
+
+      function collapsedHeight() {
+        const pad = parseFloat(getComputedStyle(container).paddingTop) || 16;
+        const rowH = firstRow.offsetHeight || 56;
+        return Math.ceil(pad + rowH + 22);
+      }
+
+      function expand() {
+        clearTimeout(collapseTimer);
+        searchSection.classList.add('cf-expanded');
+        searchSection.style.maxHeight = searchSection.scrollHeight + 'px';
+        handle.setAttribute('aria-expanded', 'true');
+      }
+
+      function collapse() {
+        searchSection.classList.remove('cf-expanded');
+        searchSection.style.maxHeight = collapsedHeight() + 'px';
+        handle.setAttribute('aria-expanded', 'false');
+      }
+
+      function scheduleCollapse(delay) {
+        clearTimeout(collapseTimer);
+        collapseTimer = setTimeout(collapse, delay || 260);
+      }
+
+      collapse();
+
+      // Desktop: hover to reveal, leave to hide.
+      searchSection.addEventListener('mouseenter', () => { if (hoverCapable()) expand(); });
+      searchSection.addEventListener('mouseleave', () => { if (hoverCapable()) scheduleCollapse(260); });
+
+      // Any device: tap/click the handle toggles. Also acts as a visible,
+      // discoverable affordance even where hover *is* available.
+      handle.addEventListener('click', e => {
+        e.stopPropagation();
+        if (searchSection.classList.contains('cf-expanded')) collapse();
+        else expand();
+      });
+
+      // Touch-friendly: tapping anywhere outside the bar collapses it.
+      document.addEventListener('click', e => {
+        if (!searchSection.classList.contains('cf-expanded')) return;
+        if (searchSection.contains(e.target)) return;
+        collapse();
+      });
+
+      function resync() {
+        if (searchSection.classList.contains('cf-expanded')) {
+          searchSection.style.maxHeight = searchSection.scrollHeight + 'px';
+        } else {
+          searchSection.style.maxHeight = collapsedHeight() + 'px';
+        }
+      }
+
+      window.addEventListener('resize', resync);
+      if (typeof ResizeObserver !== 'undefined') {
+        const ro = new ResizeObserver(resync);
+        ro.observe(searchSection);
+      }
+
+      // The bar is `hidden` (display:none) until "Start Exploring" is
+      // clicked, so its real height can't be measured yet at setup time —
+      // recompute right after it becomes visible.
+      document.getElementById('startSearchBtn')?.addEventListener('click', () => {
+        setTimeout(collapse, 0);
+        setTimeout(collapse, 60);
+      });
+    }
+
+    // ------------------------------------------------------------------
+    // UI injection
+    // ------------------------------------------------------------------
+    function injectModePanel() {
+      const host = document.querySelector('#searchSection > div');
+      if (!host || document.getElementById('cfModeRow')) return;
+
+      const panel = document.createElement('div');
+      panel.className = 'cf-panel';
+      panel.innerHTML = `
+        <div class="cf-panel-label">✨ I'm looking for a cafe to...</div>
+        <div class="cf-chip-row" id="cfModeRow">
+          <button type="button" class="cf-mode-btn active" data-mode="default">📍 Just Browse</button>
+          <button type="button" class="cf-mode-btn" data-mode="study">📚 Study Mode</button>
+          <button type="button" class="cf-mode-btn" data-mode="meeting">🤝 Meeting Mode</button>
+        </div>
+        <div class="cf-panel-label" style="margin-top:12px;">👤 I am a...</div>
+        <div class="cf-chip-row" id="cfProfileRow">
+          ${Object.keys(Intel.PROFILES).map(key => {
+            const p = Intel.PROFILES[key];
+            return `<button type="button" class="cf-profile-chip" data-profile="${key}">${p.emoji} ${p.label}</button>`;
+          }).join('')}
+        </div>
+        <div class="cf-panel-label" style="margin-top:12px;">💰 Budget per person</div>
+        <div class="cf-chip-row" id="cfBudgetRow">
+          <button type="button" class="cf-budget-chip" data-bracket="under200">Under ₹200</button>
+          <button type="button" class="cf-budget-chip" data-bracket="200-500">₹200–₹500</button>
+          <button type="button" class="cf-budget-chip" data-bracket="500-1000">₹500–₹1000</button>
+          <button type="button" class="cf-budget-chip" data-bracket="1000plus">₹1000+</button>
+        </div>
+      `;
+      host.appendChild(panel);
+
+      panel.querySelectorAll('.cf-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => setMode(btn.getAttribute('data-mode')));
+      });
+      panel.querySelectorAll('.cf-profile-chip').forEach(btn => {
+        btn.addEventListener('click', () => setProfile(btn.getAttribute('data-profile')));
+      });
+      panel.querySelectorAll('.cf-budget-chip').forEach(btn => {
+        btn.addEventListener('click', () => setBudgetBracket(btn.getAttribute('data-bracket')));
+      });
+    }
+
+    function injectCompareBar() {
+      if (document.getElementById('cfCompareBar')) return;
+      const bar = document.createElement('div');
+      bar.id = 'cfCompareBar';
+      bar.className = 'cf-compare-bar';
+      bar.innerHTML = `
+        <span id="cfCompareCount">Compare (0/3)</span>
+        <button type="button" class="cf-cmp-view" id="cfCompareViewBtn">View Comparison</button>
+        <button type="button" class="cf-cmp-clear" id="cfCompareClearBtn">Clear</button>
+      `;
+      document.body.appendChild(bar);
+      document.getElementById('cfCompareViewBtn').addEventListener('click', openComparisonModal);
+      document.getElementById('cfCompareClearBtn').addEventListener('click', clearCompare);
+    }
+
+    function injectComparisonModal() {
+      if (document.getElementById('cfComparisonModal')) return;
+      const modal = document.createElement('div');
+      modal.id = 'cfComparisonModal';
+      modal.className = 'fixed inset-0 hidden items-center justify-center z-50 bg-black/40 backdrop-blur-sm p-4';
+      modal.innerHTML = `
+        <div class="relative bg-white w-full max-w-3xl max-h-[85vh] rounded-2xl shadow-2xl border border-coffee-200 overflow-hidden flex flex-col">
+          <div class="flex items-center justify-between px-6 py-5 border-b border-coffee-100 bg-gradient-to-r from-coffee-50 to-transparent">
+            <h3 class="font-bold text-lg text-coffee-900">⚖️ Compare Cafes</h3>
+            <button type="button" id="cfComparisonClose" class="p-2 rounded-lg hover:bg-coffee-100 transition text-coffee-600">✕</button>
+          </div>
+          <div id="cfComparisonBody" class="flex-1 overflow-auto p-6"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      document.getElementById('cfComparisonClose').addEventListener('click', () => modal.classList.add('hidden'));
+      modal.addEventListener('click', e => { if (e.target === modal) modal.classList.add('hidden'); });
+    }
+
+    // ------------------------------------------------------------------
+    // Result card enhancement (score badges, budget, crowd, compare)
+    // ------------------------------------------------------------------
+    function observeResults() {
+      const results = document.getElementById('results');
+      if (!results) return;
+
+      const obs = new MutationObserver(() => {
+        if (!modeRenderInProgress) {
+          baseResults = (state.lastResults || []).slice();
+        }
+        safe(enhanceVisibleCards);
+      });
+      obs.observe(results, { childList: true });
+
+      // Delegated click: remember which place's details are being opened so
+      // the dashboard observer below knows what to render.
+      results.addEventListener('click', e => {
+        const card = e.target.closest('.result-card');
+        if (!card) return;
+        const place = cardPlaceMap.get(card);
+        if (place) pendingDashboardPlace = place;
+      });
+
+      baseResults = (state.lastResults || []).slice();
+      safe(enhanceVisibleCards);
+    }
+
+    function enhanceVisibleCards() {
+      const cards = Array.from(document.querySelectorAll('#results .result-card'));
+      const places = state.lastResults || [];
+      cards.forEach((card, i) => {
+        if (card.dataset.cfEnhanced) return;
+        const place = places[i];
+        if (!place) return;
+        cardPlaceMap.set(card, place);
+        safe(() => enhanceCard(card, place));
+        card.dataset.cfEnhanced = '1';
+      });
+    }
+
+    function enhanceCard(card, place) {
+      const inner = card.querySelector('.min-w-0.flex-1');
+      if (!inner) return;
+
+      const scores = Intel.scoreCafe(place);
+      const overall = Intel.overallScore(scores);
+      const tags = Intel.bestForTags(scores, 2);
+      const budget = Intel.estimateBudget(place);
+      const crowd = Intel.predictCrowd(place);
+      const level = overall >= 80 ? 'high' : overall >= 60 ? 'mid' : 'low';
+
+      const block = document.createElement('div');
+      block.className = 'cf-card-block';
+      block.innerHTML = `
+        <div class="cf-bestfor-row">
+          <span class="cf-overall-ring lvl-${level}" title="AI overall recommendation score">⭐ ${overall}</span>
+          ${tags.map(t => `<span class="cf-bestfor-tag">${t.emoji} ${escapeHtml(t.label.replace('Best For ', ''))}</span>`).join('')}
+        </div>
+        <div class="cf-meta-row">
+          <span>💰 ~₹${budget.avgCostPerPerson}/person</span>
+          <span>${crowd.current.emoji} ${crowd.current.level} now</span>
+        </div>
+        <div class="cf-actions-row">
+          <label class="cf-compare-label">
+            <input type="checkbox" class="cf-compare-checkbox" />
+            Compare
+          </label>
+          <button type="button" class="cf-insights-btn">View AI Insights →</button>
+        </div>
+      `;
+      inner.appendChild(block);
+
+      const checkbox = block.querySelector('.cf-compare-checkbox');
+      checkbox.addEventListener('change', () => toggleCompare(place, checkbox));
+
+      block.querySelector('.cf-insights-btn').addEventListener('click', () => {
+        pendingDashboardPlace = place;
+        if (place.place_id && typeof CFI.showPlaceDetails === 'function') {
+          CFI.showPlaceDetails(place.place_id, place.name);
+        }
+      });
+    }
+
+    // ------------------------------------------------------------------
+    // Modes / Profiles / Budget brackets — all re-use the ORIGINAL
+    // renderResults()/addMarkers() so cards/markers look & behave exactly
+    // like a normal search result, just re-ordered or filtered.
+    // ------------------------------------------------------------------
+    function currentOrigin() {
+      if (state.userLocation) return state.userLocation;
+      try { return state.map.getCenter().toJSON(); } catch (e) { return { lat: 28.6139, lng: 77.2090 }; }
+    }
+
+    function applyResults(list) {
+      modeRenderInProgress = true;
+      try {
+        if (typeof CFI.renderResults === 'function') CFI.renderResults(list, currentOrigin());
+        if (typeof CFI.addMarkers === 'function') CFI.addMarkers(list);
+      } finally {
+        setTimeout(() => { modeRenderInProgress = false; }, 80);
+      }
+    }
+
+    function setMode(mode) {
+      activeMode = mode;
+      document.querySelectorAll('#cfModeRow .cf-mode-btn').forEach(b =>
+        b.classList.toggle('active', b.getAttribute('data-mode') === mode));
+      recompute();
+    }
+
+    function setProfile(profileKey) {
+      activeProfile = (activeProfile === profileKey) ? null : profileKey;
+      document.querySelectorAll('#cfProfileRow .cf-profile-chip').forEach(b =>
+        b.classList.toggle('active', b.getAttribute('data-profile') === activeProfile));
+      recompute();
+    }
+
+    function setBudgetBracket(bracket) {
+      activeBudgetBracket = (activeBudgetBracket === bracket) ? null : bracket;
+      document.querySelectorAll('#cfBudgetRow .cf-budget-chip').forEach(b =>
+        b.classList.toggle('active', b.getAttribute('data-bracket') === activeBudgetBracket));
+      recompute();
+    }
+
+    function recompute() {
+      if (!baseResults.length) return;
+      let list = baseResults.slice();
+
+      if (activeBudgetBracket) {
+        list = list.filter(p => Intel.matchesBudgetBracket(Intel.estimateBudget(p), activeBudgetBracket));
+      }
+
+      if (activeMode === 'study') {
+        list = list
+          .filter(p => Intel.scoreCafe(p).student >= 50)
+          .sort((a, b) => Intel.scoreCafe(b).student - Intel.scoreCafe(a).student);
+      } else if (activeMode === 'meeting') {
+        list = list
+          .filter(p => Intel.scoreCafe(p).meeting >= 50)
+          .sort((a, b) => Intel.scoreCafe(b).meeting - Intel.scoreCafe(a).meeting);
+      } else if (activeProfile) {
+        const key = Intel.PROFILES[activeProfile].primaryScore;
+        list = list.slice().sort((a, b) => Intel.scoreCafe(b)[key] - Intel.scoreCafe(a)[key]);
+      }
+
+      applyResults(list);
+    }
+
+    // ------------------------------------------------------------------
+    // Comparison tool
+    // ------------------------------------------------------------------
+    function toggleCompare(place, checkbox) {
+      const key = place.place_id || place.name;
+      if (checkbox.checked) {
+        if (compareMap.size >= 3) {
+          checkbox.checked = false;
+          window.alert('You can compare up to 3 cafes at a time.');
+          return;
+        }
+        compareMap.set(key, place);
+      } else {
+        compareMap.delete(key);
+      }
+      updateCompareBar();
+    }
+
+    function updateCompareBar() {
+      const bar = document.getElementById('cfCompareBar');
+      const count = document.getElementById('cfCompareCount');
+      if (!bar || !count) return;
+      count.textContent = `Compare (${compareMap.size}/3)`;
+      bar.classList.toggle('visible', compareMap.size >= 2);
+    }
+
+    function clearCompare() {
+      compareMap.clear();
+      document.querySelectorAll('.cf-compare-checkbox').forEach(cb => { cb.checked = false; });
+      updateCompareBar();
+      const modal = document.getElementById('cfComparisonModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function openComparisonModal() {
+      if (compareMap.size < 2) return;
+      const cafes = Array.from(compareMap.values());
+
+      const rows = [
+        { label: '💻 Work', get: p => Intel.scoreCafe(p).work },
+        { label: '📚 Student', get: p => Intel.scoreCafe(p).student },
+        { label: '❤️ Date', get: p => Intel.scoreCafe(p).date },
+        { label: '🤝 Meeting', get: p => Intel.scoreCafe(p).meeting },
+        { label: '👨‍👩‍👧‍👦 Family', get: p => Intel.scoreCafe(p).family },
+        { label: '👥 Group', get: p => Intel.scoreCafe(p).group },
+        { label: '💰 Budget', get: p => { const b = Intel.estimateBudget(p); return `${b.symbol} ~₹${b.avgCostPerPerson}`; } },
+        { label: '⭐ Rating', get: p => (p.rating != null ? p.rating.toFixed(1) : 'N/A') },
+        { label: '📍 Distance', get: p => (p.distanceMeters != null ? (p.distanceMeters < 1000 ? Math.round(p.distanceMeters) + ' m' : (p.distanceMeters / 1000).toFixed(1) + ' km') : '—') },
+        { label: '👥 Crowd Now', get: p => { const c = Intel.predictCrowd(p); return `${c.current.emoji} ${c.current.level}`; } }
+      ];
+
+      function scoreColor(v) {
+        if (typeof v !== 'number') return 'inherit';
+        return v >= 80 ? 'var(--cf-green)' : v >= 60 ? 'var(--cf-amber)' : '#9ca3af';
+      }
+
+      const headHtml = cafes.map(c => `<th>${escapeHtml(c.name || 'Cafe')}</th>`).join('');
+      const bodyHtml = rows.map(r => `
+        <tr>
+          <td class="cf-cmp-name">${r.label}</td>
+          ${cafes.map(c => {
+            const v = r.get(c);
+            const isScore = typeof v === 'number';
+            return `<td ${isScore ? `class="cf-cmp-score" style="color:${scoreColor(v)}"` : ''}>${v}</td>`;
+          }).join('')}
+        </tr>
+      `).join('');
+
+      const body = document.getElementById('cfComparisonBody');
+      const modal = document.getElementById('cfComparisonModal');
+      if (!body || !modal) return;
+      body.innerHTML = `<table><thead><tr><th>Feature</th>${headHtml}</tr></thead><tbody>${bodyHtml}</tbody></table>`;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    // ------------------------------------------------------------------
+    // Insight Dashboard — appended inside the EXISTING details modal,
+    // after the original modal content is rendered. We never overwrite or
+    // remove the original content, only append to it.
+    // ------------------------------------------------------------------
+    function observeDetailsModal() {
+      const body = document.getElementById('detailsBody');
+      const modal = document.getElementById('detailsModal');
+      if (!body || !modal) return;
+
+      const obs = new MutationObserver(() => {
+        if (modal.classList.contains('hidden')) return;
+        if (body.querySelector('.cf-dashboard')) return; // already appended for this open
+        if (!pendingDashboardPlace) return;
+        safe(() => appendDashboard(body, pendingDashboardPlace));
+      });
+      obs.observe(body, { childList: true });
+
+      const reset = () => { pendingDashboardPlace = null; };
+      document.getElementById('detailsClose')?.addEventListener('click', reset);
+      modal.addEventListener('click', e => { if (e.target === modal) reset(); });
+    }
+
+    function appendDashboard(body, place) {
+      const wrap = document.createElement('div');
+      wrap.className = 'cf-dashboard';
+      wrap.innerHTML = `
+        <div class="cf-dashboard-title">✨ AI Insight Dashboard</div>
+        <div style="font-size:13px;color:var(--cf-coffee-600,#8b5e42);">Crunching the numbers…</div>
+      `;
+      body.appendChild(wrap);
+
+      const fields = ['place_id', 'name', 'rating', 'user_ratings_total', 'price_level', 'types', 'reviews'];
+      if (state.placesService && place.place_id) {
+        state.placesService.getDetails({ placeId: place.place_id, fields }, (full, status) => {
+          const ok = window.google && window.google.maps && status === window.google.maps.places.PlacesServiceStatus.OK;
+          renderDashboard(wrap, ok && full ? full : place);
+        });
+      } else {
+        renderDashboard(wrap, place);
+      }
+    }
+
+    function renderDashboard(container, place) {
+      const scores = Intel.scoreCafe(place);
+      const overall = Intel.overallScore(scores);
+      const allTags = Intel.bestForTags(scores, 6);
+      const topTags = allTags.slice(0, 2);
+      const budget = Intel.estimateBudget(place);
+      const crowd = Intel.predictCrowd(place);
+      const menu = Intel.generateMenuHighlights(place);
+      const summaryData = Intel.summarizeReviews(place);
+      const stars = Intel.ratingBreakdown(place);
+      const now = new Date();
+      const nowPct = ((now.getHours() + now.getMinutes() / 60) / 24) * 100;
+
+      const barColor = v => (v >= 80 ? 'var(--cf-green)' : v >= 60 ? 'var(--cf-amber)' : '#9ca3af');
+
+      const scoreRowsHtml = allTags.map(t => `
+        <div class="cf-score-bar-row">
+          <span class="lbl">${t.emoji} ${escapeHtml(t.label.replace('Best For ', ''))}</span>
+          <span class="cf-score-bar-track"><span class="cf-score-bar-fill" style="width:${t.score}%; background:${barColor(t.score)};"></span></span>
+          <span class="cf-score-bar-val">${t.score}</span>
+        </div>
+      `).join('');
+
+      const peakBlocksHtml = crowd.peak.windows.map(w => {
+        const left = (w.startHour / 24) * 100;
+        const width = ((w.endHour - w.startHour) / 24) * 100;
+        return `<div class="cf-peak-block" style="left:${left}%; width:${width}%;"></div>`;
+      }).join('');
+
+      const starsHtml = stars.map(s => `
+        <div class="cf-stars-row">
+          <span class="lbl">${s.star}★</span>
+          <span class="cf-score-bar-track"><span class="cf-score-bar-fill" style="width:${s.pct}%; background:var(--cf-coffee-600);"></span></span>
+          <span class="pct">${s.pct}%</span>
+        </div>
+      `).join('');
+
+      const level = overall >= 80 ? 'high' : overall >= 60 ? 'mid' : 'low';
+
+      container.innerHTML = `
+        <div class="cf-dashboard-title">✨ AI Insight Dashboard</div>
+        <div class="cf-bestfor-row" style="margin-bottom:14px;">
+          <span class="cf-overall-ring lvl-${level}">⭐ Overall ${overall}/100</span>
+          ${topTags.map(t => `<span class="cf-bestfor-tag">${t.emoji} Best for ${escapeHtml(t.label.replace('Best For ', ''))}</span>`).join('')}
+        </div>
+
+        <div class="cf-dash-grid">
+          <div class="cf-score-card">
+            <h5>Category Scores</h5>
+            ${scoreRowsHtml}
+          </div>
+          <div class="cf-score-card">
+            <h5>Rating Breakdown (estimated)</h5>
+            ${starsHtml}
+          </div>
+        </div>
+
+        <div class="cf-dash-grid">
+          <div class="cf-score-card">
+            <h5>Peak Hours</h5>
+            <div class="cf-peak-track">
+              ${peakBlocksHtml}
+              <div class="cf-peak-now-marker" style="left:${nowPct}%;"></div>
+            </div>
+            <div class="cf-peak-legend"><span>12 AM</span><span>12 PM</span><span>11 PM</span></div>
+            <div style="font-size:12.5px; margin-top:8px; color:var(--cf-coffee-700);">
+              Best time to visit: <strong>${crowd.peak.bestWindow.label}</strong>
+            </div>
+          </div>
+          <div class="cf-score-card">
+            <h5>Crowd Prediction</h5>
+            <div class="cf-crowd-grid">
+              <div class="cf-crowd-cell"><div class="t">Now</div><div class="v">${crowd.current.emoji} ${crowd.current.level}</div></div>
+              <div class="cf-crowd-cell"><div class="t">In 1 hr</div><div class="v">${crowd.in1h.emoji} ${crowd.in1h.level}</div></div>
+              <div class="cf-crowd-cell"><div class="t">In 3 hrs</div><div class="v">${crowd.in3h.emoji} ${crowd.in3h.level}</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cf-dash-grid">
+          <div class="cf-score-card">
+            <h5>Top Picks (Most Ordered)</h5>
+            <div class="cf-pill-row">${menu.topPicks.map(i => `<span class="cf-item-pill">${escapeHtml(i)}</span>`).join('')}</div>
+          </div>
+          <div class="cf-score-card">
+            <h5>Must Try (Signature)</h5>
+            <div class="cf-pill-row">${menu.mustTry.map(i => `<span class="cf-item-pill signature">✓ ${escapeHtml(i)}</span>`).join('')}</div>
+          </div>
+        </div>
+
+        <div class="cf-score-card" style="margin-bottom:14px;">
+          <h5>💰 Budget</h5>
+          <div style="font-size:13px; color:var(--cf-coffee-700);">${budget.symbol} ${budget.label} • ~₹${budget.avgCostPerPerson} per person (typical range ${budget.rangeLabel})</div>
+        </div>
+
+        <div class="cf-summary-box">${escapeHtml(summaryData.summary)}</div>
+
+        <div class="cf-heuristic-note">Scores, crowd levels, peak hours and menu highlights are AI/heuristic estimates based on rating, price and available reviews — not live data.</div>
+      `;
+    }
+
+    function escapeHtml(str) {
+      return String(str == null ? '' : str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+  }
+})();
+
+    </script>
+  </body>
+</html>
